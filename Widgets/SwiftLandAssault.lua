@@ -67,10 +67,10 @@ local CMD_LAND_ATTACK        = 19996
 local SWIFT_NAME   = "planefighter"
 local SWIFT_DEF_ID = UnitDefNames[SWIFT_NAME].id
 
-local swiftStack     = {}
-local selectedSwifts = nil
+local land_attack_controllers          = {}
+local selected_land_attack_controllers = nil
 
-local cmdLandAttack = {
+local CMD_LAND_ATTACK_DEF = {
     id      = CMD_LAND_ATTACK,
     type    = CMDTYPE.ICON_MAP,
     tooltip = 'Makes Swift land optimally to fire at target area.',
@@ -81,26 +81,35 @@ local cmdLandAttack = {
     pos     = { CMD_ONOFF, CMD_REPEAT, CMD_MOVE_STATE, CMD_FIRE_STATE, CMD_RETREAT },
 }
 
+function get_unit_base_range(unit_def_ID)
+    local unit_base_ranges = {
+        [SWIFT_DEF_ID] = 600,
+    }
+    return unit_base_ranges[unit_def_ID]
+end
+
 local LandAttackController = {
-    unitID,
+    unit_ID,
     pos,
     allyTeamID = GetMyAllyTeamID(),
-    range,
+    base_range,
+    max_range,
     targetParams,
     is_activated = false,
     
-    new = function(self, unitID)
-        self        = deepcopy(self)
-        self.unitID = unitID
-        self.range  = GetUnitMaxRange(self.unitID)
-        self.pos    = { GetUnitPosition(self.unitID) }
-        if is_debug then Echo("[LandAttackController] Added " .. unitID) end
+    new = function(self, unit_ID)
+        self            = deepcopy(self)
+        self.unit_ID    = unit_ID
+        self.base_range = get_unit_base_range(GetUnitDefID(self.unit_ID))
+        self.max_range  = GetUnitMaxRange(self.unit_ID)
+        self.pos        = { GetUnitPosition(self.unit_ID) }
+        if is_debug then Echo("[LandAttackController] Added " .. self.unit_ID) end
         return self
     end,
     
     unset = function(self)
-        GiveOrderToUnit(self.unitID, CMD_STOP, {}, { "" }, 1)
-        if is_debug then Echo("[LandAttackController] Removed " .. self.unitID) end
+        GiveOrderToUnit(self.unit_ID, CMD_STOP, {}, { "" }, 1)
+        if is_debug then Echo("[LandAttackController] Removed " .. self.unit_ID) end
         return nil
     end,
     
@@ -108,13 +117,13 @@ local LandAttackController = {
         self.targetParams = params
     end,
     
-    landAttack = function(self)
-        self.pos = { GetUnitPosition(self.unitID) }
+    execute = function(self)
+        self.pos = { GetUnitPosition(self.unit_ID) }
         local rotation = atan((self.pos[1] - self.targetParams[1]) / (self.pos[3] - self.targetParams[3]))
         local targetPosRelative = {
-            sin(rotation) * (self.range - 40),
+            sin(rotation) * (self.base_range),
             nil,
-            cos(rotation) * (self.range - 40),
+            cos(rotation) * (self.base_range),
         }
     
         local targetPosAbsolute = {}
@@ -134,9 +143,10 @@ local LandAttackController = {
         end
     
         targetPosAbsolute[2] = GetGroundHeight(targetPosAbsolute[1], targetPosAbsolute[3])
-        if is_debug then Echo("[LandAttackController] Attacking " .. table_to_string(targetPosAbsolute) .. ", attacker pos: " .. table_to_string(self.pos)) end
-        GiveOrderToUnit(self.unitID, CMD_TOGGLE_FLIGHT, 1, { "" }, 0)
-        GiveOrderToUnit(self.unitID, CMD_MOVE, { targetPosAbsolute[1], targetPosAbsolute[2], targetPosAbsolute[3] }, 0)
+        if is_debug then Echo("[LandAttackController] Attacking " .. table_to_string(targetPosAbsolute) ..
+                ", attacker pos: " .. table_to_string(self.pos)) end
+        GiveOrderToUnit(self.unit_ID, CMD_TOGGLE_FLIGHT, 1, { "" }, 0)
+        GiveOrderToUnit(self.unit_ID, CMD_MOVE, { targetPosAbsolute[1], targetPosAbsolute[2], targetPosAbsolute[3] }, 0)
         
         self.is_activated = true
     end,
@@ -146,22 +156,22 @@ local LandAttackController = {
     end,
 }
 
-function widget:UnitFinished(unitID, unitDefID, unitTeam)
+function widget:UnitFinished(unit_ID, unitDefID, unitTeam)
     if (UnitDefs[unitDefID].name == SWIFT_NAME) and (unitTeam == GetMyTeamID()) then
-        swiftStack[unitID] = LandAttackController:new(unitID);
+        land_attack_controllers[unit_ID] = LandAttackController:new(unit_ID);
     end
 end
 
-function widget:UnitDestroyed(unitID)
-    landAttackController = swiftStack[unitID]
+function widget:UnitDestroyed(unit_ID)
+    landAttackController = land_attack_controllers[unit_ID]
     if not (landAttackController == nil) then
-        swiftStack[unitID] = landAttackController:unset()
+        land_attack_controllers[unit_ID] = landAttackController:unset()
     end
 end
 
-function widget:UnitCommand(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOpts, cmdTag)
+function widget:UnitCommand(unit_ID, unitDefID, unitTeam, cmdID, cmdParams, cmdOpts, cmdTag)
     if (cmdID == CMD_RAW_MOVE and UnitDefs[unitDefID].name == SWIFT_NAME) then
-        landAttackController = swiftStack[unitID]
+        landAttackController = land_attack_controllers[unit_ID]
         if (landAttackController and landAttackController.is_activated) then
             landAttackController:cancel()
         end
@@ -171,19 +181,19 @@ end
 --- COMMAND HANDLING
 
 function widget:CommandNotify(cmdID, params, options)
-    if selectedSwifts ~= nil then
+    if selected_land_attack_controllers ~= nil then
         if (cmdID == CMD_LAND_ATTACK and #params == 3) then
-            for i = 1, #selectedSwifts do
-                if (swiftStack[selectedSwifts[i]]) then
-                    swiftStack[selectedSwifts[i]]:setTargetParams(params)
-                    swiftStack[selectedSwifts[i]]:landAttack()
+            for i = 1, #selected_land_attack_controllers do
+                if (land_attack_controllers[selected_land_attack_controllers[i]]) then
+                    land_attack_controllers[selected_land_attack_controllers[i]]:setTargetParams(params)
+                    land_attack_controllers[selected_land_attack_controllers[i]]:execute()
                 end
             end
             return true
         else
-            for i = 1, #selectedSwifts do
-                if (swiftStack[selectedSwifts[i]]) then
-                    GiveOrderToUnit(selectedSwifts[i], CMD_TOGGLE_FLIGHT, 0, { "" }, 0)
+            for i = 1, #selected_land_attack_controllers do
+                if (land_attack_controllers[selected_land_attack_controllers[i]]) then
+                    GiveOrderToUnit(selected_land_attack_controllers[i], CMD_TOGGLE_FLIGHT, 0, { "" }, 0)
                 end
             end
         end
@@ -191,17 +201,17 @@ function widget:CommandNotify(cmdID, params, options)
 end
 
 function widget:SelectionChanged(selectedUnits)
-    selectedSwifts = findSwifts(selectedUnits)
+    selected_land_attack_controllers = findSwifts(selectedUnits)
 end
 
 function findSwifts(units)
     local res = {}
     local n = 0
     for i = 1, #units do
-        local unitID = units[i]
-        if (SWIFT_DEF_ID == GetUnitDefID(unitID)) then
+        local unit_ID = units[i]
+        if (SWIFT_DEF_ID == GetUnitDefID(unit_ID)) then
             n = n + 1
-            res[n] = unitID
+            res[n] = unit_ID
         end
     end
     if n == 0 then
@@ -212,9 +222,9 @@ function findSwifts(units)
 end
 
 function widget:CommandsChanged()
-    if selectedSwifts then
+    if selected_land_attack_controllers then
         local customCommands = widgetHandler.customCommands
-        customCommands[#customCommands + 1] = cmdLandAttack
+        customCommands[#customCommands + 1] = CMD_LAND_ATTACK_DEF
     end
 end
 
@@ -234,11 +244,11 @@ function widget:Initialize()
     DisableForSpec()
     local units = GetTeamUnits(GetMyTeamID())
     for i = 1, #units do
-        unitID = units[i]
-        DefID  = GetUnitDefID(unitID)
+        unit_ID = units[i]
+        DefID  = GetUnitDefID(unit_ID)
         if (UnitDefs[DefID].name == SWIFT_NAME) then
-            if (swiftStack[unitID] == nil) then
-                swiftStack[unitID] = LandAttackController:new(unitID)
+            if (land_attack_controllers[unit_ID] == nil) then
+                land_attack_controllers[unit_ID] = LandAttackController:new(unit_ID)
             end
         end
     end
