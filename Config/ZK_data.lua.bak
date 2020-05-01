@@ -261,15 +261,15 @@ return {
 				[2] = 4,
 			},
 			[60] = {
-				[1] = "vehcon",
-				[2] = 0,
+				[1] = "gunshipbomb",
+				[2] = 2,
 			},
 			[61] = {
 				[1] = "vehraid",
 				[2] = 1,
 			},
 			[62] = {
-				[1] = "gunshipaa",
+				[1] = "vehaa",
 				[2] = 5,
 			},
 			[63] = {
@@ -285,8 +285,8 @@ return {
 				[2] = 9,
 			},
 			[66] = {
-				[1] = "gunshipbomb",
-				[2] = 2,
+				[1] = "vehcon",
+				[2] = 0,
 			},
 			[67] = {
 				[1] = "vehheavyarty",
@@ -357,7 +357,7 @@ return {
 				[2] = 5,
 			},
 			[84] = {
-				[1] = "vehaa",
+				[1] = "gunshipaa",
 				[2] = 5,
 			},
 			[85] = {
@@ -749,8 +749,8 @@ return {
 			epic_News_Ticker_backgroundOpacity = 0.69999999,
 			epic_News_Ticker_hideBar = false,
 			epic_Outline_Shader_v3_thickness = 3,
-			epic_Save_Game_Menu_autosaveFrequency = 2,
-			epic_Save_Game_Menu_enableautosave = true,
+			epic_Save_Game_Menu_autosaveFrequency = 1,
+			epic_Save_Game_Menu_enableautosave = false,
 			epic_Selection_Hierarchy_selectionFilteringOnlyAltOption = true,
 			["epic_Settings/Camera_Camera_Type"] = "Default",
 			["epic_Settings/Graphics/Effects_Particle_density"] = 15500,
@@ -777,9 +777,10 @@ return {
 			epic_Simple_Settings_zoomSpeed = 40,
 			epic_SmoothCam_camSpeed = 0.28,
 			epic_SmoothCam_tiltZoom = 0.31999999,
+			epic_Smooth_Scroll_smooth_mmb_scroll = true,
 			epic_Startup_Info_and_Selector_hideTrainers = false,
 			epic_Startup_Info_and_Selector_showModules = true,
-			epic_Stereo3D_hidecursor = false,
+			epic_Stereo3D_hidecursor = true,
 			epic_UnitShapes_allyselectionlevel = "enabled",
 			epic_UnitShapes_showallyplayercolours = false,
 			epic_Unit_Start_State_bomberdisarm_firestate0 = 0,
