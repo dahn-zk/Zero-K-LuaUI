@@ -122,7 +122,7 @@ return {
 		{"showmetalmap", "None"}, 
 		{"hideinterfaceandcursor", "C+S+f3"}, 
 		{"NoSound", "Any+F6"}, 
-		{"DynamicSky", "None"},
+		{"DynamicSky", "Alt+F7"},
 		{"savegame", "None"}, 
 		{"createvideo", "None"}, 
 		{"viewlobby", "F11"}, 
@@ -245,6 +245,5 @@ return {
 		{"epic_combo_overhead_/_free_camera_trackmode", "None"}, 
 		{"epic_combo_overhead_/_free_camera_thirdpersontrack", "None"}, 
 		{"toggleoverview", "None"}, 
-		{"HideInterface", "None"}, 
 	}, 
 }
