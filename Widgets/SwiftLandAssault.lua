@@ -7,12 +7,13 @@ TODO:
 -- Widget Config
 ----------------------------------------------------------------------------------------------------------------------
 version = "1.0"
+name = "Swift Land Assault Command"
 cmd_dsc = "Command Swift to land optimally to fire on target area."
 is_debug = true
 
 function widget:GetInfo()
     return {
-        name    = "Swift Land Assault Command",
+        name    = name,
         desc    = "[v" .. version .. "] " .. cmd_dsc,
         author  = "terve886, dahn",
         date    = "2020",
@@ -87,19 +88,20 @@ UNIT_BASE_RANGES = {
 -- Globals
 ----------------------------------------------------------------------------------------------------------------------
 
-local land_attack_controllers          = {}
-local selected_land_attack_controllers = nil
+local land_attack_controllers = {}
+local selected_land_attackers = nil
 
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
-local LandAttackController = {
+local LandAttackController    = {
     unit_ID,
+    phalanx_id,
     pos,
     allyTeamID = GetMyAllyTeamID(),
     base_range,
     max_range,
-    targetParams,
+    target_pos,
     is_activated = false,
     
     new = function(self, unit_ID)
@@ -118,41 +120,51 @@ local LandAttackController = {
         return nil
     end,
     
-    setTargetParams = function(self, params)
-        self.targetParams = params
+    set_target_pos = function(self, pos)
+        self.target_pos = pos
     end,
-    
+
     execute = function(self)
-        self.pos = { GetUnitPosition(self.unit_ID) }
-        local rotation = vector_atan(self.pos, self.targetParams)
-        local targetPosRelative = {
-            sin(rotation) * (self.base_range),
-            nil,
-            cos(rotation) * (self.base_range),
-        }
-    
-        local targetPosAbsolute = {}
-    
-        if (self.pos[3] <= self.targetParams[3]) then
-            targetPosAbsolute = {
-                self.targetParams[1] - targetPosRelative[1],
-                nil,
-                self.targetParams[3] - targetPosRelative[3],
-            }
+        if is_debug then Echo("[LandAttackController]") end
+        self.pos                  = { GetUnitPosition(self.unit_ID) }
+        local pos_delta           = v_sub(self.target_pos, self.pos)
+        pos_delta[2]              = 0
+        local pos_delta_norm      = v_norm(pos_delta)
+        if is_debug then Echo("  ||self_to_target_dx||: " .. table_to_string(pos_delta_norm)) end
+        local landing_pos_delta   = v_mul(pos_delta, self.base_range / pos_delta_norm)
+        if is_debug then Echo("  landing_pos_delta: " .. table_to_string(landing_pos_delta)) end
+        local phalanx_len         = #selected_land_attackers * 30
+        local phalanx_dx          = v_normed_orth(landing_pos_delta)
+        if is_debug then Echo("  phalanx_dx: " .. table_to_string(phalanx_dx)) end
+        local phalanx_beg_dx      = v_mul(phalanx_dx, phalanx_len)
+        phalanx_beg_dx            = v_sub(landing_pos_delta, v_div(phalanx_beg_dx, 2))
+        if is_debug then Echo("  phalanx_beg_dx: " .. table_to_string(phalanx_beg_dx)) end
+        local phalanx_beg         = v_sub(self.target_pos, phalanx_beg_dx)
+        if is_debug then Echo("  phalanx_beg: " .. table_to_string(phalanx_beg)) end
+        local phalanx_spacing
+        if #selected_land_attackers > 1 then
+            phalanx_spacing = phalanx_len / (#selected_land_attackers - 1)
         else
-            targetPosAbsolute = {
-                self.targetParams[1] + targetPosRelative[1],
-                nil,
-                self.targetParams[3] + targetPosRelative[3],
-            }
+            phalanx_spacing = 0
         end
+        if is_debug then Echo("  phalanx_spacing: " .. table_to_string(phalanx_spacing)) end
+        local phalanx_dx_from_beg = v_mul(phalanx_dx, phalanx_spacing * (self.phalanx_id - 1))
+        if is_debug then Echo("  phalanx_dx_from_beg: " .. table_to_string(phalanx_dx_from_beg)) end
+        local landing_pos         = v_add(phalanx_beg, phalanx_dx_from_beg)
+        landing_pos[2]            = GetGroundHeight(landing_pos[1], landing_pos[3])
+        if is_debug then Echo("  landing_pos: " .. table_to_string(landing_pos)) end
+        --if is_debug then Echo("[LandAttackController]" ..
+        --        "\n  landing: " .. table_to_string(landing_pos) ..
+        --        "\n  attacker: " .. table_to_string(self.pos) ..
+        --        "\n  target: " .. table_to_string(self.target_pos) ..
+        --        "\n  self_to_target_dx: " .. table_to_string(pos_delta) ..
+        --        "\n  ||self_to_target_dx||: " .. table_to_string(pos_delta_norm) ..
+        --        "\n  self_to_landing_dx: " .. table_to_string(landing_pos_delta) ..
+        --        "") end
     
-        targetPosAbsolute[2] = GetGroundHeight(targetPosAbsolute[1], targetPosAbsolute[3])
-        if is_debug then Echo("[LandAttackController] Attacking " .. table_to_string(targetPosAbsolute) ..
-                ", attacker pos: " .. table_to_string(self.pos)) end
         GiveOrderToUnit(self.unit_ID, CMD.IDLEMODE, 1, { "" }, 0)
-        GiveOrderToUnit(self.unit_ID, CMD.MOVE, { targetPosAbsolute[1], targetPosAbsolute[2], targetPosAbsolute[3] }, 0)
-        
+        GiveOrderToUnit(self.unit_ID, CMD.MOVE, { landing_pos[1], landing_pos[2], landing_pos[3] }, 0)
+    
         self.is_activated = true
     end,
     
@@ -161,7 +173,7 @@ local LandAttackController = {
     end,
 }
 
-function findSwifts(units)
+function find_land_attackers(units)
     local res = {}
     local n = 0
     for i = 1, #units do
@@ -205,31 +217,36 @@ end
 ----------------------------------------------------------------------------------------------------------------------
 
 function widget:CommandNotify(cmdID, params, options)
-    if selected_land_attack_controllers ~= nil then
+    if selected_land_attackers ~= nil then
         if (cmdID == CMD_LAND_ATTACK and #params == 3) then
-            for i = 1, #selected_land_attack_controllers do
-                if (land_attack_controllers[selected_land_attack_controllers[i]]) then
-                    land_attack_controllers[selected_land_attack_controllers[i]]:setTargetParams(params)
-                    land_attack_controllers[selected_land_attack_controllers[i]]:execute()
+            for i = 1, #selected_land_attackers do
+                if (land_attack_controllers[selected_land_attackers[i]]) then
+                    land_attack_controllers[selected_land_attackers[i]]:set_target_pos(params)
+                    land_attack_controllers[selected_land_attackers[i]]:execute()
                 end
             end
             return true
         else
-            for i = 1, #selected_land_attack_controllers do
-                if (land_attack_controllers[selected_land_attack_controllers[i]]) then
-                    GiveOrderToUnit(selected_land_attack_controllers[i], CMD.IDLEMODE, 0, { "" }, 0)
+            for i = 1, #selected_land_attackers do
+                if (land_attack_controllers[selected_land_attackers[i]]) then
+                    GiveOrderToUnit(selected_land_attackers[i], CMD.IDLEMODE, 0, { "" }, 0)
                 end
             end
         end
     end
 end
 
-function widget:SelectionChanged(selectedUnits)
-    selected_land_attack_controllers = findSwifts(selectedUnits)
+function widget:SelectionChanged(selected_units)
+    selected_land_attackers = find_land_attackers(selected_units)
+    if selected_land_attackers ~= nil then
+        for i = 1, #selected_land_attackers do
+            land_attack_controllers[selected_land_attackers[i]].phalanx_id = i
+        end
+    end
 end
 
 function widget:CommandsChanged()
-    if selected_land_attack_controllers then
+    if selected_land_attackers then
         local customCommands = widgetHandler.customCommands
         customCommands[#customCommands + 1] = CMD_LAND_ATTACK_DEF
     end
