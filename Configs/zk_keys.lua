@@ -122,7 +122,7 @@ return {
 		{"showmetalmap", "None"}, 
 		{"hideinterfaceandcursor", "C+S+f3"}, 
 		{"NoSound", "Any+F6"}, 
-		{"DynamicSky", "Any+F7"}, 
+		{"DynamicSky", "None"},
 		{"savegame", "None"}, 
 		{"createvideo", "None"}, 
 		{"viewlobby", "F11"}, 
