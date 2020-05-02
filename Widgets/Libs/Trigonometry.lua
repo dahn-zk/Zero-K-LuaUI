@@ -4,7 +4,7 @@
 
 VFS.Include("LuaUI/Widgets/Libs/math.lua")
 sqrt = math.sqrt
-atan = math.atan
+atan2 = math.atan2
 
 function v_add(a, b)
     return {
@@ -67,7 +67,7 @@ function v_normalize(x)
 end
 
 function v_atan(a, b)
-    return atan((a[1] - b[1]) / (a[3] - b[3]))
+    return atan2((a[1] - b[1]), (a[3] - b[3]))
 end
 
 --- Get a normalized orthogonal vector

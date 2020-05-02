@@ -7,13 +7,12 @@ TODO:
 -- Widget Config
 ----------------------------------------------------------------------------------------------------------------------
 version = "1.0"
-name = "Swift Land Assault Command"
 cmd_dsc = "Command Swift to land optimally to fire on target area."
 is_debug = true
 
 function widget:GetInfo()
     return {
-        name    = name,
+        name    = "Swift Land Assault Command",
         desc    = "[v" .. version .. "] " .. cmd_dsc,
         author  = "terve886, dahn",
         date    = "2020",
@@ -88,87 +87,88 @@ UNIT_BASE_RANGES = {
 -- Globals
 ----------------------------------------------------------------------------------------------------------------------
 
-local land_attack_controllers = {}
+local land_attacker_controllers = {}
 local selected_land_attackers = nil
 
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
-local LandAttackController    = {
-    unit_ID,
-    phalanx_id,
+local LandAttackerController = {
+    unit_id,
+    selection_idx,
     pos,
-    allyTeamID = GetMyAllyTeamID(),
+    rotation,
     base_range,
     max_range,
     target_pos,
-    is_activated = false,
+    is_activated,
     
-    new = function(self, unit_ID)
+    new = function(self, unit_id)
         self            = deepcopy(self)
-        self.unit_ID    = unit_ID
-        self.base_range = UNIT_BASE_RANGES[GetUnitDefID(self.unit_ID)]
-        self.max_range  = GetUnitMaxRange(self.unit_ID)
-        self.pos        = { GetUnitPosition(self.unit_ID) }
-        if is_debug then Echo("[LandAttackController] Added " .. self.unit_ID) end
+        self.unit_id    = unit_id
+        self.base_range = UNIT_BASE_RANGES[GetUnitDefID(self.unit_id)]
+        self.max_range  = GetUnitMaxRange(self.unit_id)
+        self.pos        = { GetUnitPosition(self.unit_id) }
+        if is_debug then Echo("[LandAttackController] Added " .. self.unit_id) end
         return self
     end,
     
     unset = function(self)
-        GiveOrderToUnit(self.unit_ID, CMD.STOP, {}, { "" }, 1)
-        if is_debug then Echo("[LandAttackController] Removed " .. self.unit_ID) end
+        GiveOrderToUnit(self.unit_id, CMD.STOP, {}, { "" }, 1)
+        if is_debug then Echo("[LandAttackController] Removed " .. self.unit_id) end
         return nil
     end,
     
     set_target_pos = function(self, pos)
         self.target_pos = pos
-    end,
-
-    execute = function(self)
-        if is_debug then Echo("[LandAttackController]") end
-        self.pos                  = { GetUnitPosition(self.unit_ID) }
-        local pos_delta           = v_sub(self.target_pos, self.pos)
-        pos_delta[2]              = 0
-        local pos_delta_norm      = v_norm(pos_delta)
-        if is_debug then Echo("  ||self_to_target_dx||: " .. table_to_string(pos_delta_norm)) end
-        local landing_pos_delta   = v_mul(pos_delta, self.base_range / pos_delta_norm)
-        if is_debug then Echo("  landing_pos_delta: " .. table_to_string(landing_pos_delta)) end
-        local phalanx_len         = #selected_land_attackers * 30
-        local phalanx_dx          = v_normed_orth(landing_pos_delta)
-        if is_debug then Echo("  phalanx_dx: " .. table_to_string(phalanx_dx)) end
-        local phalanx_beg_dx      = v_mul(phalanx_dx, phalanx_len)
-        phalanx_beg_dx            = v_sub(landing_pos_delta, v_div(phalanx_beg_dx, 2))
-        if is_debug then Echo("  phalanx_beg_dx: " .. table_to_string(phalanx_beg_dx)) end
-        local phalanx_beg         = v_sub(self.target_pos, phalanx_beg_dx)
-        if is_debug then Echo("  phalanx_beg: " .. table_to_string(phalanx_beg)) end
-        local phalanx_spacing
-        if #selected_land_attackers > 1 then
-            phalanx_spacing = phalanx_len / (#selected_land_attackers - 1)
-        else
-            phalanx_spacing = 0
+        local cluster_center = { 0, 0, 0 }
+        for i = 1, #selected_land_attackers do
+            cluster_center = v_add(cluster_center, land_attacker_controllers[selected_land_attackers[i]].pos)
         end
-        if is_debug then Echo("  phalanx_spacing: " .. table_to_string(phalanx_spacing)) end
-        local phalanx_dx_from_beg = v_mul(phalanx_dx, phalanx_spacing * (self.phalanx_id - 1))
-        if is_debug then Echo("  phalanx_dx_from_beg: " .. table_to_string(phalanx_dx_from_beg)) end
-        local landing_pos         = v_add(phalanx_beg, phalanx_dx_from_beg)
-        landing_pos[2]            = GetGroundHeight(landing_pos[1], landing_pos[3])
-        if is_debug then Echo("  landing_pos: " .. table_to_string(landing_pos)) end
-        --if is_debug then Echo("[LandAttackController]" ..
-        --        "\n  landing: " .. table_to_string(landing_pos) ..
-        --        "\n  attacker: " .. table_to_string(self.pos) ..
-        --        "\n  target: " .. table_to_string(self.target_pos) ..
-        --        "\n  self_to_target_dx: " .. table_to_string(pos_delta) ..
-        --        "\n  ||self_to_target_dx||: " .. table_to_string(pos_delta_norm) ..
-        --        "\n  self_to_landing_dx: " .. table_to_string(landing_pos_delta) ..
-        --        "") end
+        cluster_center = v_div(cluster_center, #selected_land_attackers)
+        self.rotation  = v_atan(cluster_center, self.target_pos)
+    end,
     
-        GiveOrderToUnit(self.unit_ID, CMD.IDLEMODE, 1, { "" }, 0)
-        GiveOrderToUnit(self.unit_ID, CMD.MOVE, { landing_pos[1], landing_pos[2], landing_pos[3] }, 0)
+    execute = function(self)
+        self.pos = { GetUnitPosition(self.unit_id) }
+        local rotation = self.rotation
+        local rank_capacity = 18
+        local dr = (math.pi / 4) / rank_capacity
+        local inter_rank_spacing = 70
+        --local phalanx_depth = #selected_land_attackers // rank_capacity
+        local rank_idx = math.floor(self.selection_idx / rank_capacity)
+        local base_rotation = rotation - (dr * (rank_capacity - 1)) / 2
+        rotation = base_rotation + dr * (self.selection_idx % rank_capacity)
+        local range = self.base_range + inter_rank_spacing * rank_idx
+    
+        local target_pos_relative = {
+            sin(rotation) * range,
+            nil,
+            cos(rotation) * range,
+        }
+    
+        local landing_pos = {
+            self.target_pos[1] + target_pos_relative[1],
+            nil,
+            self.target_pos[3] + target_pos_relative[3],
+        }
+    
+        landing_pos[2] = GetGroundHeight(landing_pos[1], landing_pos[3])
+        
+        GiveOrderToUnit(self.unit_id, CMD.IDLEMODE, 1, { "" }, 0)
+        GiveOrderToUnit(self.unit_id, CMD.MOVE, { landing_pos[1], landing_pos[2], landing_pos[3] }, 0)
     
         self.is_activated = true
+        
+        if is_debug then Echo("[LandAttackController] " ..
+                "\n Landing: " .. table_to_string(landing_pos) ..
+                "\n Attacker: " .. table_to_string(self.pos) ..
+        "") end
     end,
     
     cancel = function(self)
+        if is_debug then Echo ("Cancelling " .. self.unit_id) end
+        GiveOrderToUnit(self.unit_id, CMD.IDLEMODE, 0, { "" }, 0)
         self.is_activated = false
     end,
 }
@@ -177,10 +177,10 @@ function find_land_attackers(units)
     local res = {}
     local n = 0
     for i = 1, #units do
-        local unit_ID = units[i]
-        if (SWIFT_DEF_ID == GetUnitDefID(unit_ID)) then
+        local unit_id = units[i]
+        if (SWIFT_DEF_ID == GetUnitDefID(unit_id)) then
             n = n + 1
-            res[n] = unit_ID
+            res[n] = unit_id
         end
     end
     if n == 0 then
@@ -190,24 +190,24 @@ function find_land_attackers(units)
     end
 end
 
-function widget:UnitFinished(unit_ID, unitDefID, unitTeam)
-    if (UnitDefs[unitDefID].name == SWIFT_NAME) and (unitTeam == GetMyTeamID()) then
-        land_attack_controllers[unit_ID] = LandAttackController:new(unit_ID);
+function widget:UnitFinished(unit_id, unit_def_if, unit_team)
+    if (UnitDefs[unit_def_if].name == SWIFT_NAME) and (unit_team == GetMyTeamID()) then
+        land_attacker_controllers[unit_id] = LandAttackerController:new(unit_id);
     end
 end
 
-function widget:UnitDestroyed(unit_ID)
-    landAttackController = land_attack_controllers[unit_ID]
-    if not (landAttackController == nil) then
-        land_attack_controllers[unit_ID] = landAttackController:unset()
+function widget:UnitDestroyed(unit_id)
+    local land_attacker_controller = land_attacker_controllers[unit_id]
+    if not (land_attacker_controller == nil) then
+        land_attacker_controllers[unit_id] = land_attacker_controller:unset()
     end
 end
 
-function widget:UnitCommand(unit_ID, unitDefID, unitTeam, cmdID, cmdParams, cmdOpts, cmdTag)
-    if (cmdID == CMD.RAW_MOVE and UnitDefs[unitDefID].name == SWIFT_NAME) then
-        landAttackController = land_attack_controllers[unit_ID]
-        if (landAttackController and landAttackController.is_activated) then
-            landAttackController:cancel()
+function widget:UnitCommand(unit_id, unit_def_if, unit_team, cmd_id, cmd_params, cmd_opts, cmd_tag)
+    if (cmd_id == CMD.RAW_MOVE and UnitDefs[unit_def_if].name == SWIFT_NAME) then
+        local land_attacker_controller = land_attacker_controllers[unit_id]
+        if (land_attacker_controller and land_attacker_controller.is_activated) then
+            land_attacker_controller:cancel()
         end
     end
 end
@@ -216,20 +216,24 @@ end
 -- Command Handling
 ----------------------------------------------------------------------------------------------------------------------
 
-function widget:CommandNotify(cmdID, params, options)
+function widget:CommandNotify(cmd_id, params, options)
     if selected_land_attackers ~= nil then
-        if (cmdID == CMD_LAND_ATTACK and #params == 3) then
+        if is_debug then Echo("Command notify " .. cmd_id .. " " .. table_to_string(params)) end
+        if (cmd_id == CMD_LAND_ATTACK and #params == 3) then
             for i = 1, #selected_land_attackers do
-                if (land_attack_controllers[selected_land_attackers[i]]) then
-                    land_attack_controllers[selected_land_attackers[i]]:set_target_pos(params)
-                    land_attack_controllers[selected_land_attackers[i]]:execute()
+                local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
+                if (land_attacker_controller) then
+                    land_attacker_controller:set_target_pos(params)
+                    land_attacker_controller:execute()
                 end
             end
             return true
         else
+            if is_debug then Echo("  selected_land_attackers " .. table_to_string(selected_land_attackers)) end
             for i = 1, #selected_land_attackers do
-                if (land_attack_controllers[selected_land_attackers[i]]) then
-                    GiveOrderToUnit(selected_land_attackers[i], CMD.IDLEMODE, 0, { "" }, 0)
+                local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
+                if (land_attacker_controller and land_attacker_controller.is_activated) then
+                    land_attacker_controller:cancel()
                 end
             end
         end
@@ -240,7 +244,8 @@ function widget:SelectionChanged(selected_units)
     selected_land_attackers = find_land_attackers(selected_units)
     if selected_land_attackers ~= nil then
         for i = 1, #selected_land_attackers do
-            land_attack_controllers[selected_land_attackers[i]].phalanx_id = i
+            local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
+            if (land_attacker_controller) then land_attacker_controller.selection_idx = i end
         end
     end
 end
@@ -252,7 +257,8 @@ function widget:CommandsChanged()
     end
 end
 
----
+----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
 
 local function DisableForSpec()
     if GetSpecState() then
@@ -268,11 +274,10 @@ function widget:Initialize()
     DisableForSpec()
     local units = GetTeamUnits(GetMyTeamID())
     for i = 1, #units do
-        unit_ID = units[i]
-        DefID  = GetUnitDefID(unit_ID)
-        if (UnitDefs[DefID].name == SWIFT_NAME) then
-            if (land_attack_controllers[unit_ID] == nil) then
-                land_attack_controllers[unit_ID] = LandAttackController:new(unit_ID)
+        unit_id = units[i]
+        if (UnitDefs[GetUnitDefID(unit_id)].name == SWIFT_NAME) then
+            if (land_attacker_controllers[unit_id] == nil) then
+                land_attacker_controllers[unit_id] = LandAttackerController:new(unit_id)
             end
         end
     end
