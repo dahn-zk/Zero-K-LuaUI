@@ -30,7 +30,7 @@ end
 LIBS_PATH = "LuaUI/Widgets/Libs"
 if is_debug then VFS.Include(LIBS_PATH .. "/TableToString.lua") end
 VFS.Include(LIBS_PATH .. "/DeepCopy.lua")
-VFS.Include(LIBS_PATH .. "/Trigonometry.lua")
+VFS.Include(LIBS_PATH .. "/Algebra.lua")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Speedups
@@ -48,6 +48,7 @@ local GetTeamUnits        = Spring.GetTeamUnits
 local GetMyTeamID         = Spring.GetMyTeamID
 local GetUnitDefID        = Spring.GetUnitDefID
 local GetSpecState        = Spring.GetSpectatingState
+local MarkerAddPoint      = Spring.MarkerAddPoint
 local Echo                = Spring.Echo
 
 ----------------------------------------------------------------------------------------------------------------------
@@ -76,22 +77,43 @@ local CMD_LAND_ATTACK_DEF = {
 }
 
 ----------------------------------------------------------------------------------------------------------------------
--- Logic Config
+-- Globals
 ----------------------------------------------------------------------------------------------------------------------
 
 UNIT_BASE_RANGES = {
     [SWIFT_DEF_ID] = 600,
 }
-
-----------------------------------------------------------------------------------------------------------------------
--- Globals
-----------------------------------------------------------------------------------------------------------------------
+PATH_STEP_SIZE = 50
 
 local land_attacker_controllers = {}
 local selected_land_attackers = nil
 
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
+
+local mission_control = {
+    cluster_center,
+    target_pos,
+    rotation,
+    set_positions = function(self, target_pos)
+        self.target_pos = target_pos
+        self.cluster_center = { 0, 0, 0 }
+        for i = 1, #selected_land_attackers do
+            local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
+            if (land_attacker_controller) then
+                land_attacker_pos = { GetUnitPosition(land_attacker_controller.unit_id) }
+                self.cluster_center = v_add(self.cluster_center, land_attacker_pos)
+            end
+        end
+        self.cluster_center = v_div(self.cluster_center, #selected_land_attackers)
+        self.rotation  = v_atan(self.cluster_center, target_pos)
+        if is_debug then
+            MarkerAddPoint(self.target_pos[1], self.target_pos[2], self.target_pos[3], "target", false)
+            MarkerAddPoint(self.cluster_center[1], self.cluster_center[2], self.cluster_center[3], "cluster center", false)
+            Echo("rotation: " .. self.rotation)
+        end
+    end,
+}
 
 local LandAttackerController = {
     unit_id,
@@ -119,19 +141,9 @@ local LandAttackerController = {
         return nil
     end,
     
-    set_target_pos = function(self, pos)
-        self.target_pos = pos
-        local cluster_center = { 0, 0, 0 }
-        for i = 1, #selected_land_attackers do
-            cluster_center = v_add(cluster_center, land_attacker_controllers[selected_land_attackers[i]].pos)
-        end
-        cluster_center = v_div(cluster_center, #selected_land_attackers)
-        self.rotation  = v_atan(cluster_center, self.target_pos)
-    end,
-    
     execute = function(self)
         self.pos = { GetUnitPosition(self.unit_id) }
-        local rotation = self.rotation
+        local rotation = mission_control.rotation
         local rank_capacity = 18
         local dr = (math.pi / 4) / rank_capacity
         local inter_rank_spacing = 70
@@ -148,9 +160,9 @@ local LandAttackerController = {
         }
     
         local landing_pos = {
-            self.target_pos[1] + target_pos_relative[1],
+            mission_control.target_pos[1] + target_pos_relative[1],
             nil,
-            self.target_pos[3] + target_pos_relative[3],
+            mission_control.target_pos[3] + target_pos_relative[3],
         }
     
         landing_pos[2] = GetGroundHeight(landing_pos[1], landing_pos[3])
@@ -220,12 +232,11 @@ function widget:CommandNotify(cmd_id, params, options)
     if selected_land_attackers ~= nil then
         if is_debug then Echo("Command notify " .. cmd_id .. " " .. table_to_string(params)) end
         if (cmd_id == CMD_LAND_ATTACK and #params == 3) then
+            local target_pos = params
+            mission_control:set_positions(target_pos)
             for i = 1, #selected_land_attackers do
                 local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
-                if (land_attacker_controller) then
-                    land_attacker_controller:set_target_pos(params)
-                    land_attacker_controller:execute()
-                end
+                if (land_attacker_controller) then land_attacker_controller:execute(target_pos) end
             end
             return true
         else
