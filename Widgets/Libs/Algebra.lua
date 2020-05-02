@@ -7,19 +7,51 @@ sqrt = math.sqrt
 atan2 = math.atan2
 
 function v_add(a, b)
-    return {
-        a[1] + b[1],
-        a[2] + b[2],
-        a[3] + b[3],
-    }
+    if type(a) == "number" and type(b) == "table" then
+        return {
+            a + b[1],
+            a + b[2],
+            a + b[3],
+        }
+    elseif type(a) == "table" and type(b) == "number" then
+        return {
+            a[1] + b,
+            a[2] + b,
+            a[3] + b,
+        }
+    elseif type(a) == "table" and type(b) == "table" then
+        return {
+            a[1] + b[1],
+            a[2] + b[2],
+            a[3] + b[3],
+        }
+    else
+        return a + b
+    end
 end
 
 function v_sub(a, b)
-    return {
-        a[1] - b[1],
-        a[2] - b[2],
-        a[3] - b[3],
-    }
+    if type(a) == "number" and type(b) == "table" then
+        return {
+            a - b[1],
+            a - b[2],
+            a - b[3],
+        }
+    elseif type(a) == "table" and type(b) == "number" then
+        return {
+            a[1] - b,
+            a[2] - b,
+            a[3] - b,
+        }
+    elseif type(a) == "table" and type(b) == "table" then
+        return {
+            a[1] - b[1],
+            a[2] - b[2],
+            a[3] - b[3],
+        }
+    else
+        return a - b
+    end
 end
 
 function v_mul(a, b)
@@ -55,6 +87,30 @@ function v_div(a, b)
         }
     else
         return a * b
+    end
+end
+
+function v_pow(a, b)
+    if type(a) == "number" and type(b) == "table" then
+        return {
+            a ^ b[1],
+            a ^ b[2],
+            a ^ b[3],
+        }
+    elseif type(a) == "table" and type(b) == "number" then
+        return {
+            a[1] ^ b,
+            a[2] ^ b,
+            a[3] ^ b,
+        }
+    elseif type(a) == "table" and type(b) == "table" then
+        return {
+            a[1] ^ b[1],
+            a[2] ^ b[2],
+            a[3] ^ b[3],
+        }
+    else
+        return a ^ b
     end
 end
 

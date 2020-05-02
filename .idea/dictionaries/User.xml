@@ -1,11 +1,29 @@
 <component name="ProjectDictionaryState">
   <dictionary name="User">
     <words>
+      <w>autoland</w>
+      <w>callin</w>
+      <w>cmds</w>
+      <w>cmdtype</w>
+      <w>customcmds</w>
+      <w>dahn</w>
       <w>deepcopy</w>
       <w>defs</w>
+      <w>dgun</w>
       <w>dont</w>
+      <w>idlemode</w>
       <w>keysyms</w>
+      <w>loopbackattack</w>
+      <w>lrect</w>
+      <w>manualfire</w>
+      <w>mrect</w>
+      <w>onoff</w>
+      <w>orth</w>
+      <w>planefighter</w>
+      <w>rrect</w>
       <w>tacnuke</w>
+      <w>terve</w>
+      <w>unsynced</w>
     </words>
   </dictionary>
 </component>

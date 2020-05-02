@@ -487,7 +487,7 @@ return {
 		},
 		[122] = {
 			[1] = "DynamicSky",
-			[2] = "Any+F7",
+			[2] = "Alt+F7",
 		},
 		[123] = {
 			[1] = "savegame",
@@ -974,8 +974,20 @@ return {
 			[2] = "None",
 		},
 		[244] = {
+			[1] = "epic_news_ticker_usesounds",
+			[2] = "A+C+f1",
+		},
+		[245] = {
+			[1] = "select Visible+_Not_Builder_Not_Building_Not_Aircraft_Weapons+_ClearSelection_SelectAll+",
+			[2] = "A+/",
+		},
+		[246] = {
+			[1] = "select Visible+_Not_Building_Not_Transport_Aircraft_Weapons+_ClearSelection_SelectAll+",
+			[2] = "A+.",
+		},
+		[247] = {
 			[1] = "toggleoverview",
-			[2] = "None",
+			[2] = "Ctrl+tab",
 		},
 	},
 }
