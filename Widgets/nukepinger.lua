@@ -5,7 +5,7 @@ function widget:GetInfo() return {
 	date    = "2020-05-01",
 	license = "CC-0",
 	layer   = -1,
-	enabled = true,
+	enabled = false,
 } end
 
 local online = true
@@ -162,4 +162,21 @@ function widget:GameFrame(f)
 			end
 		end
 	end
+end
+
+----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------
+
+local function DisableForSpec()
+    if GetSpecState() then
+        widgetHandler:RemoveWidget()
+    end
+end
+
+function widget:PlayerChanged(playerID)
+    DisableForSpec()
+end
+
+function widget:Initialize()
+    DisableForSpec()
 end

@@ -11,7 +11,7 @@ function widget:GetInfo()
   }
 end
 
-VFS.Include("LuaUI/Widgets/Libs/TableToString.lua")
+VFS.Include("LuaUI/Widgets/Libs/table_to_string.lua")
 
 local pi = math.pi
 local sin = math.sin

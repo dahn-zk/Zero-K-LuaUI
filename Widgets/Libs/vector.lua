@@ -3,8 +3,8 @@
 ----------------------------------------------------------------------------------------------------------------------
 
 VFS.Include("LuaUI/Widgets/Libs/math.lua")
-sqrt = math.sqrt
-atan2 = math.atan2
+local sqrt = math.sqrt
+local atan2 = math.atan2
 
 function v_add(a, b)
     if type(a) == "number" and type(b) == "table" then

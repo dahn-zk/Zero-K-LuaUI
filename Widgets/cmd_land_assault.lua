@@ -1,27 +1,52 @@
---[[
-TODO:
-- Reset Idle State to Fly first manual command after Land Assault.
-]]
-
 ----------------------------------------------------------------------------------------------------------------------
--- Widget Config
+-- Config
 ----------------------------------------------------------------------------------------------------------------------
 version = "1.0"
 cmd_dsc = "Command Swift to land optimally to fire on target area."
-is_debug = true
+is_debug = false
 
-function widget:GetInfo()
-    return {
-        name    = "Land Assault Command",
-        desc    = "[v" .. version .. "] " .. cmd_dsc,
-        author  = "terve886, dahn",
-        date    = "2020",
-        license = "PD", -- should be compatible with Spring
-        layer   = 2,
-        handler = true, -- for adding customCommand into UI
-        enabled = false, -- loaded by default?
-    }
-end
+--- At which range away from target units should land
+BASE_RANGE = 600
+RANK_CAPACITY = 28
+INTER_RANK_SPACING = 50
+--- Rotation between two neibor Swifts in a rank. Configures the distance between two neibors, ideally should be a
+--- simple distance value, but currently the logic is based on circular formation.
+DR = math.pi / 80
+--- Distance for the first "correctional checkpoint". The next one is in double distance and so on.
+STEP_DX_0_NORM = 400
+
+-- @formatter:off
+function widget:GetInfo() return {
+    name    = "Swift Land Assault",
+    desc    = "[v" .. version .. "] \n"
+            .. " \n" -- at least one char to be included by parser as a separate line
+            .. cmd_dsc .. "\n"
+            .. " \n"
+            .. "  The command is added with the same shortkey as for Reclaim command.\n"
+    	    .. "The widget computes optimal positions for each Swift to attack an area around a selected point.\n"
+            .. 'If the attack force is far enough, it also queues a set of \"correctional checkpoints\" Swifts have '
+            .. "to pass through, which makes the final formation more focused at the center of attacking area.\n"
+            .. "  It also automatically manages Fly/Land states unless a toggle was issued manually.\n"
+            .. " \n"
+            .. "  To achieve final optimal positioning Swifts land in a phalanx " .. RANK_CAPACITY .. " wide starting "
+            .. "at " .. BASE_RANGE .. " elmos away from target. Distance between neiboring ranks = "
+            .. INTER_RANK_SPACING .. ", and distance between neiboring Swifts within rank is as close as possible "
+            .. "without them trying to overlap. Note that the logic is still not enough to achieve a perfect formation "
+            .. "especially if the army will occupy more than a few ranks of a formation, so bigger your force is or "
+            .. " more is it spread out - further away you need to issue the command.\n"
+            .. " \n"
+            .. "  Limitations: does not work with command queues; does not compute the shortest traversal paths like "
+            .. "custom formations widget does; only works with single point; does not work with moving targets; still "
+            .. "flaky with > 50 Swifts and not recommended to use for < 5 swifts - it's more optimal to issue manual "
+            .. "line formation instead.",
+    author  = "terve886, dahn",
+    date    = "2020",
+    license = "CC0",
+    layer   = 2,
+    handler = true,
+    enabled = false,
+} end
+-- @formatter:on
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Includes
@@ -29,33 +54,39 @@ end
 
 LIBS_PATH = "LuaUI/Widgets/Libs"
 
---VFS.Include(LIBS_PATH .. "/cmd.lua")
-if is_debug then VFS.Include(LIBS_PATH .. "/TableToString.lua") end
-VFS.Include(LIBS_PATH .. "/DeepCopy.lua")
-VFS.Include(LIBS_PATH .. "/Algebra.lua")
+VFS.Include(LIBS_PATH .. "/cmd.lua")
+if is_debug then VFS.Include(LIBS_PATH .. "/table_to_string.lua") end
+VFS.Include(LIBS_PATH .. "/deepcopy.lua")
+VFS.Include(LIBS_PATH .. "/vector.lua")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Speedups
 ----------------------------------------------------------------------------------------------------------------------
 
-local sin  = math.sin
-local cos  = math.cos
+-- @formatter:off
+local sin   = math.sin
+local cos   = math.cos
+local floor = math.floor
 
-local GetUnitMaxRange     = Spring.GetUnitMaxRange
-local GetUnitPosition     = Spring.GetUnitPosition
-local GiveOrderToUnit     = Spring.GiveOrderToUnit
-local GetGroundHeight     = Spring.GetGroundHeight
-local GetTeamUnits        = Spring.GetTeamUnits
-local GetMyTeamID         = Spring.GetMyTeamID
-local GetUnitDefID        = Spring.GetUnitDefID
-local GetSpecState        = Spring.GetSpectatingState
-local MarkerAddPoint      = Spring.MarkerAddPoint
-local Echo                = Spring.Echo
+local GetUnitCommands = Spring.GetUnitCommands
+local GetUnitStates   = Spring.GetUnitStates
+local GetUnitMaxRange = Spring.GetUnitMaxRange
+local GetUnitPosition = Spring.GetUnitPosition
+local GiveOrderToUnit = Spring.GiveOrderToUnit
+local GetGroundHeight = Spring.GetGroundHeight
+local GetTeamUnits    = Spring.GetTeamUnits
+local GetMyTeamID     = Spring.GetMyTeamID
+local GetUnitDefID    = Spring.GetUnitDefID
+local GetSpecState    = Spring.GetSpectatingState
+local MarkerAddPoint  = Spring.MarkerAddPoint
+local Echo            = Spring.Echo
+-- @formatter:on
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------------------------------------------------
 
+-- @formatter:off
 local CMD_LAND_ATTACK = 19996
 local SWIFT_NAME      = "planefighter"
 local SWIFT_DEF_ID    = UnitDefNames[SWIFT_NAME].id
@@ -66,7 +97,7 @@ local CMD_LAND_ATTACK_DEF = {
     tooltip = cmd_dsc,
     cursor  = 'Attack',
     action  = 'reclaim',
-    params  = { },
+    params  = {},
     texture = 'LuaUI/Images/commands/Bold/dgun.png',
     pos     = {
         CMD.ONOFF,
@@ -76,15 +107,11 @@ local CMD_LAND_ATTACK_DEF = {
         CMD.RETREAT,
     },
 }
+-- @formatter:on
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Globals
 ----------------------------------------------------------------------------------------------------------------------
-
---- At which range away from target units should land
-UNIT_BASE_RANGES = {
-    [SWIFT_DEF_ID] = 600,
-}
 
 local land_attacker_controllers = {}
 local selected_land_attackers = nil
@@ -92,47 +119,28 @@ local selected_land_attackers = nil
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
-function is_move_type_cmd(cmd_id)
-    -- @formatter:off
-    return cmd_id == CMD.AREA_ATTACK
-        or cmd_id == CMD.ATTACK
-        or cmd_id == CMD.CAPTURE
-        or cmd_id == CMD.FIGHT
-        or cmd_id == CMD.GUARD
-        or cmd_id == CMD.LOAD_UNITS
-        or cmd_id == CMD.MANUALFIRE
-        or cmd_id == CMD.MOVE
-        or cmd_id == CMD.PATROL
-        or cmd_id == CMD.RECLAIM
-        or cmd_id == CMD.REPAIR
-        or cmd_id == CMD.RESTORE
-        or cmd_id == CMD.RESURRECT
-        or cmd_id == CMD.UNLOAD_UNIT
-        or cmd_id == CMD.UNLOAD_UNITS
-    -- @formatter:on
-end
-
-function find_latest_positional_cmd(cmd_queue)
-    for i = #cmd_queue, 1, -1 do
-        local cmd = cmd_queue[i]
-        if is_debug then Echo("find_latest_positional_cmd" .. table_to_string(cmd)) end
-        if is_move_type_cmd(cmd.id) then
-           return cmd
-        end
-    end
-    return nil
-end
-
 local mission_control = {
+    --- An average of all selected Swifts positions.
     cluster_center,
-    cluster_center_2,
+    --- A point the command was issued to.
     target_pos,
+    --- An angle between the target position and the cluster center.
     rotation,
+    --- Where the phalanx starts.
+    base_rotation,
     
+    --- Sets `target_pos`, computes and sets `cluster_pos` and `rotation`.
     process_target = function(self, target_pos)
         self.target_pos = target_pos
-        self:comp_cluster_center()
+        
+        self:_comp_cluster_center()
+        
         self.rotation = v_atan(self.cluster_center, target_pos)
+        
+        local phalanx_length = RANK_CAPACITY -- avoiding `math.min`. see https://springrts.com/wiki/Lua_Performance
+        if (#selected_land_attackers < phalanx_length) then phalanx_length = #selected_land_attackers end
+        self.base_rotation = self.rotation - (DR * (phalanx_length - 1)) / 2
+        
         if is_debug then
             MarkerAddPoint(self.target_pos[1], self.target_pos[2], self.target_pos[3], "target", false)
             MarkerAddPoint(self.cluster_center[1], self.cluster_center[2], self.cluster_center[3], "cluster center", false)
@@ -140,22 +148,11 @@ local mission_control = {
         end
     end,
     
-    comp_cluster_center = function(self)
+    _comp_cluster_center = function(self)
         self.cluster_center = { 0, 0, 0 }
         for i = 1, #selected_land_attackers do
-            local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
-            local cmds = Spring.GetUnitCommands(land_attacker_controller.unit_id, -1)
-            local latest_positional_cmd = find_latest_positional_cmd(cmds)
-            if is_debug then Echo("MissionControl | unit: " .. land_attacker_controller.unit_id
-                .. " | latest_positional_cmd: " .. table_to_string(latest_positional_cmd)) end
-            local pos
-            -- @formatter:off
-            if latest_positional_cmd == nil
-            then pos = { GetUnitPosition(land_attacker_controller.unit_id) }
-            else pos = { latest_positional_cmd.params[1],
-                         latest_positional_cmd.params[2],
-                         latest_positional_cmd.params[3] } end
-            -- @formatter:on
+            local controller = land_attacker_controllers[selected_land_attackers[i]]
+            local pos = { GetUnitPosition(controller.unit_id) }
             self.cluster_center = v_add(self.cluster_center, pos)
         end
         self.cluster_center = v_div(self.cluster_center, #selected_land_attackers)
@@ -167,112 +164,93 @@ local LandAttackerController = {
     selection_idx,
     pos,
     rotation,
-    base_range,
     max_range,
     target_pos,
     is_activated,
     
     new = function(self, unit_id)
-        self            = deepcopy(self)
-        self.unit_id    = unit_id
-        self.base_range = UNIT_BASE_RANGES[GetUnitDefID(self.unit_id)]
-        self.max_range  = GetUnitMaxRange(self.unit_id)
-        self.pos        = { GetUnitPosition(self.unit_id) }
+        self = deepcopy(self)
+        self.unit_id = unit_id
+        self.max_range = GetUnitMaxRange(self.unit_id)
+        self.pos = { GetUnitPosition(self.unit_id) }
         self.is_activated = false
-        if is_debug then Echo("LandAttackController | Added unit: " .. self.unit_id) end
+        if is_debug then Echo("LandAttackController | added unit: " .. self.unit_id) end
         return self
     end,
     
     unset = function(self)
-        GiveOrderToUnit(self.unit_id, CMD.STOP, {}, { "" }, 1)
-        if is_debug then Echo("LandAttackController | Removed unit: " .. self.unit_id) end
+        GiveOrderToUnit(self.unit_id, CMD_STOP, {}, { "" }, 1)
+        if is_debug then Echo("LandAttackController | removed unit: " .. self.unit_id) end
         return nil
     end,
     
     execute = function(self)
         self.pos = { GetUnitPosition(self.unit_id) }
-        local rotation = mission_control.rotation
-        local rank_capacity = 28
-        --local rank_capacity = math.floor(#selected_land_attackers / 1.2)
-        --local dr = (4/7) * math.pi / rank_capacity
-        local dr = math.pi / 90
-        local inter_rank_spacing = 50
-        --local phalanx_depth = #selected_land_attackers // rank_capacity
-        local rank_idx = math.floor(self.selection_idx / rank_capacity)
-        local base_rotation = rotation - (dr * (math.min(rank_capacity, #selected_land_attackers) - 1)) / 2
-        rotation = base_rotation + dr * (self.selection_idx % rank_capacity)
-        local range = self.base_range + inter_rank_spacing * rank_idx
+        local landing_x, target_to_landing_dx = self:_compute_landing_x()
     
-        local target_pos_relative = v_mul({ sin(rotation), 0, cos(rotation) }, range)
-    
-        local landing_pos = v_add(mission_control.target_pos, target_pos_relative)
-        landing_pos[2] = GetGroundHeight(landing_pos[1], landing_pos[3])
-    
-        local cmds = Spring.GetUnitCommands(self.unit_id, -1)
+        local cmds = GetUnitCommands(self.unit_id, -1)
         for i = 0, #cmds do
             if cmds[i] and cmds[i].id ~= nil then
-                GiveOrderToUnit(self.unit_id, CMD.REMOVE, {cmds[i].id}, CMD.OPT_ALT)
+                GiveOrderToUnit(self.unit_id, CMD_REMOVE, {cmds[i].id}, CMD_OPT_ALT)
             end
         end
-        local final_pos = nil
-        --for i = #cmds, 1, -1 do
-        --    --if cmds[i] and cmds[i].id and (cmds[i].id == CMD.MOVE or cmds[i].id == CMD.RAW_MOVE) then
-        --    if cmds[i] and cmds[i].id and #cmds[i].params == 3 then
-        --        local cmd_pos = cmds[i].params
-        --        final_pos = cmd_pos
-        --        break
-        --    end
-        --end
-        if final_pos == nil then final_pos = self.pos end
     
-        local STEP_DX_0_NORM = 800
-        --local STEP_POW       = 1.2
-    
-        local step_dx = v_mul(v_normalize(target_pos_relative), STEP_DX_0_NORM)
-        --local step_dx = v_mul(v_normalize(v_sub(self.pos, landing_pos)), STEP_DX_0_NORM)
+        local step_dx = v_mul(v_normalize(target_to_landing_dx), STEP_DX_0_NORM)
         local i = -1
-        local x = landing_pos
+        local x = landing_x
         local dst = v_norm(v_sub(x, self.pos))
         while dst > STEP_DX_0_NORM do
-            GiveOrderToUnit(self.unit_id, CMD.INSERT,
-                    { i, CMD.MOVE, CMD.OPT_INTERNAL, x[1], x[2], x[3] },
-                    CMD.OPT_ALT
+            x[2] = GetGroundHeight(x[1], x[3])
+            GiveOrderToUnit(self.unit_id, CMD_INSERT,
+                    { i, CMD_MOVE, CMD_OPT_INTERNAL, x[1], x[2], x[3] },
+                    CMD_OPT_ALT
             )
             i = i - 1
             step_dx = v_mul(2, step_dx)
             dst = dst - v_norm(step_dx)
-            x = v_add(x, step_dx); x[2] = nil --GetGroundHeight(x[1], x[3])
+            x = v_add(x, step_dx)
         end
     
-        local cmd_id, _, cmd_tag = Spring.GetUnitCurrentCommand(self.unit_id)
-        --GiveOrderToUnit(self.unit_id, CMD.MOVE, { landing_pos[1], landing_pos[2], landing_pos[3] }, 0)
-        --if cmd_tag ~= nil then GiveOrderToUnit(self.unit_id, CMD.REMOVE, cmd_tag, CMD.OPT_ALT) end
-        --if cmd_id ~= nil then GiveOrderToUnit(self.unit_id, CMD.REMOVE, cmd_id, CMD.OPT_ALT) end
-        GiveOrderToUnit(self.unit_id, CMD.IDLEMODE, 1, { "" }, CMD.OPT_ALT)
+        GiveOrderToUnit(self.unit_id, CMD_IDLEMODE, 1, {}, CMD_OPT_ALT)
     
         self.is_activated = true
     
-        if is_debug then Echo("[LandAttackController] " ..
-                "\n Landing: " .. table_to_string(landing_pos) ..
-                "\n Attacker: " .. table_to_string(self.pos) ..
-                "") end
+        if is_debug then Echo("LandAttackController"
+                .. " | landing: " .. table_to_string(landing_x)
+                .. " | attacker: " .. table_to_string(self.pos)
+        ) end
     end,
     
     process_cmd = function(self)
-        local is_autoland = Spring.GetUnitStates(self.unit_id).autoland
+        local is_autoland = GetUnitStates(self.unit_id).autoland
         if is_debug then Echo("LandAttackController | process_cmd | is_autoland = " .. tostring(is_autoland)
                 .. " | is_activated = " .. tostring(self.is_activated)
                 .. " | unit: " .. self.unit_id
         ) end
         if (is_autoland and self.is_activated) then
-            self:cancel()
+            self:_cancel()
         end
     end,
     
-    cancel = function(self)
-        if is_debug then Echo ("LandAttackController | cancel | unit: " .. self.unit_id) end
-        GiveOrderToUnit(self.unit_id, CMD.IDLEMODE, 0, { "" }, 0)
+    _cancel = function(self)
+        if is_debug then Echo("LandAttackController | cancel | unit: " .. self.unit_id) end
+        GiveOrderToUnit(self.unit_id, CMD_IDLEMODE, 0, {}, 0)
         self.is_activated = false
+    end,
+    
+    _compute_landing_x = function(self)
+        local rotation = mission_control.base_rotation + DR * (self.selection_idx % RANK_CAPACITY)
+        
+        local rank_idx = floor(self.selection_idx / RANK_CAPACITY)
+        local range = BASE_RANGE + INTER_RANK_SPACING * rank_idx
+    
+        local target_to_landing_dx = v_mul({ sin(rotation), 0, cos(rotation) }, range)
+    
+        local landing_x = v_add(mission_control.target_pos, target_to_landing_dx)
+        landing_x[2] = GetGroundHeight(landing_x[1], landing_x[3])
+        
+        if is_debug then Echo("LandAttackController | _compute_landing_pos | " .. table_to_string(landing_x)) end
+        return landing_x, target_to_landing_dx
     end,
 }
 
@@ -314,12 +292,12 @@ function debug_cmd(callin_name, unit_id, cmd_id, cmd_params, cmd_opts)
     local cmd
     if cmd_id == CMD_LAND_ATTACK then cmd = "LAND_ATTACK" else cmd = CMD[cmd_id] end
     if cmd == nil then cmd = cmd_id .. "(?)" end
-    Echo(callin_name
+    if is_debug then Echo(callin_name
             .. " | " .. cmd
             .. " | params: " .. table_to_string(cmd_params)
             .. " | opts: " .. table_to_string(cmd_opts)
             .. " | unit: " .. unit_id
-    )
+    ) end
 end
 
 --- FIGHT, PATROL, GUARD, LOOPBACKATTACK, etc are processed here
@@ -329,9 +307,9 @@ end
 --- (Synced/Unsynced shared)
 function widget:UnitCommand(unit_id, unit_def_if, unit_team, cmd_id, cmd_params, cmd_opts, cmd_tag)
     if is_debug then debug_cmd("UnitCommand", unit_id, cmd_id, cmd_params, cmd_opts) end
-    --if (cmd_id ~= CMD.RAW_MOVE and unit_def_if == SWIFT_DEF_ID) then
-    if (cmd_id ~= CMD_LAND_ATTACK and unit_def_if == SWIFT_DEF_ID) then
-        land_attacker_controllers[unit_id]:process_cmd(cmd_id)
+    if (unit_def_if == SWIFT_DEF_ID) then
+        local ctrl = land_attacker_controllers[unit_id]
+        if (ctrl) then ctrl:process_cmd(cmd_id) end
     end
 end
 
@@ -347,17 +325,13 @@ function widget:CommandNotify(cmd_id, cmd_params, cmd_opts)
             local target_pos = cmd_params
             mission_control:process_target(target_pos)
             for i = 1, #selected_land_attackers do
-                local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
-                if (land_attacker_controller) then land_attacker_controller:execute(target_pos) end
+                land_attacker_controllers[selected_land_attackers[i]]:execute(target_pos)
             end
             return true
         else
-            if is_debug then Echo("  selected_land_attackers " .. table_to_string(selected_land_attackers)) end
             for i = 1, #selected_land_attackers do
                 local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
-                if (land_attacker_controller and land_attacker_controller.is_activated) then
-                    land_attacker_controller:cancel()
-                end
+                if (land_attacker_controller) then land_attacker_controller:process_cmd(cmd_id) end
             end
         end
     end
@@ -381,6 +355,7 @@ function widget:CommandsChanged()
 end
 
 ----------------------------------------------------------------------------------------------------------------------
+-- Disable for spec
 ----------------------------------------------------------------------------------------------------------------------
 
 local function DisableForSpec()
@@ -405,3 +380,6 @@ function widget:Initialize()
         end
     end
 end
+
+----------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------

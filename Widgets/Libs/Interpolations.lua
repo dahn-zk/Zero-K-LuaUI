@@ -1,4 +1,4 @@
-VFS.Include("LuaUI/Widgets/Libs/Algebra.lua")
+VFS.Include("LuaUI/Widgets/Libs/vector.lua")
 
 --- https://en.wikipedia.org/wiki/Cubic_Hermite_spline
 function cubic_hermite_spline(x, y, dx, dy)

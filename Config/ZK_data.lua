@@ -74,8 +74,8 @@ return {
 				[2] = 1,
 			},
 			[13] = {
-				[1] = "shieldriot",
-				[2] = 4,
+				[1] = "cloakarty",
+				[2] = 5,
 			},
 			[14] = {
 				[1] = "shieldscout",
@@ -114,8 +114,8 @@ return {
 				[2] = 4,
 			},
 			[23] = {
-				[1] = "cloakassault",
-				[2] = 7,
+				[1] = "shipcon",
+				[2] = 0,
 			},
 			[24] = {
 				[1] = "jumpassault",
@@ -150,8 +150,8 @@ return {
 				[2] = 1,
 			},
 			[32] = {
-				[1] = "jumpscout",
-				[2] = 9,
+				[1] = "spideraa",
+				[2] = 5,
 			},
 			[33] = {
 				[1] = "spiderantiheavy",
@@ -230,8 +230,8 @@ return {
 				[2] = 5,
 			},
 			[52] = {
-				[1] = "tankassault",
-				[2] = 5,
+				[1] = "amphriot",
+				[2] = 8,
 			},
 			[53] = {
 				[1] = "tankcon",
@@ -266,19 +266,19 @@ return {
 				[2] = 7,
 			},
 			[61] = {
-				[1] = "spideraa",
-				[2] = 5,
+				[1] = "cloakassault",
+				[2] = 7,
 			},
 			[62] = {
-				[1] = "gunshipbomb",
-				[2] = 2,
+				[1] = "gunshipaa",
+				[2] = 5,
 			},
 			[63] = {
-				[1] = "gunshipcon",
-				[2] = 0,
+				[1] = "vehraid",
+				[2] = 1,
 			},
 			[64] = {
-				[1] = "athena",
+				[1] = "gunshipemp",
 				[2] = 8,
 			},
 			[65] = {
@@ -298,24 +298,24 @@ return {
 				[2] = 8,
 			},
 			[69] = {
-				[1] = "vehcon",
-				[2] = 0,
+				[1] = "gunshipbomb",
+				[2] = 2,
 			},
 			[70] = {
 				[1] = "vehheavyarty",
 				[2] = 7,
 			},
 			[71] = {
-				[1] = "vehraid",
-				[2] = 1,
+				[1] = "gunshipcon",
+				[2] = 0,
 			},
 			[72] = {
 				[1] = "vehriot",
 				[2] = 4,
 			},
 			[73] = {
-				[1] = "gunshipemp",
-				[2] = 8,
+				[1] = "vehscout",
+				[2] = 2,
 			},
 			[74] = {
 				[1] = "vehsupport",
@@ -326,24 +326,24 @@ return {
 				[2] = 9,
 			},
 			[76] = {
-				[1] = "gunshipheavytrans",
-				[2] = 9,
-			},
-			[77] = {
 				[1] = "bomberdisarm",
 				[2] = 6,
 			},
-			[78] = {
-				[1] = "cloakskirm",
+			[77] = {
+				[1] = "gunshipheavytrans",
 				[2] = 9,
 			},
+			[78] = {
+				[1] = "tankassault",
+				[2] = 5,
+			},
 			[79] = {
-				[1] = "amphriot",
-				[2] = 8,
+				[1] = "jumpscout",
+				[2] = 9,
 			},
 			[80] = {
-				[1] = "cloakarty",
-				[2] = 5,
+				[1] = "cloakskirm",
+				[2] = 9,
 			},
 			[81] = {
 				[1] = "gunshipraid",
@@ -362,16 +362,16 @@ return {
 				[2] = 5,
 			},
 			[85] = {
-				[1] = "vehscout",
-				[2] = 2,
+				[1] = "athena",
+				[2] = 8,
 			},
 			[86] = {
 				[1] = "shieldarty",
 				[2] = 6,
 			},
 			[87] = {
-				[1] = "gunshipaa",
-				[2] = 5,
+				[1] = "vehcon",
+				[2] = 0,
 			},
 			[88] = {
 				[1] = "shieldassault",
@@ -382,8 +382,8 @@ return {
 				[2] = 9,
 			},
 			[90] = {
-				[1] = "shipcon",
-				[2] = 0,
+				[1] = "shieldriot",
+				[2] = 4,
 			},
 		},
 	},
@@ -616,7 +616,7 @@ return {
 		},
 	},
 	CustomFormations2 = {
-		maxHungarianUnits = 68,
+		maxHungarianUnits = 71,
 	},
 	["EPIC Menu"] = {
 		["epic_Settings/Misc_Show_Advanced_Settings"] = true,
@@ -917,7 +917,7 @@ return {
 			energypylon = 41,
 			energysingu = 4,
 			energysolar = 0,
-			energywind = 0,
+			energywind = 2,
 			factoryamph = 8,
 			factorycloak = 8,
 			factorygunship = 8,
