@@ -119,6 +119,7 @@ local selected_land_attackers = nil
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
 
+--- Collective brain
 local mission_control = {
     --- An average of all selected Swifts positions.
     cluster_center,
@@ -159,6 +160,7 @@ local mission_control = {
     end
 }
 
+--- Individual Swift controller. May use data from `mission_control`
 local LandAttackerController = {
     unit_id,
     selection_idx,
@@ -179,22 +181,26 @@ local LandAttackerController = {
     end,
     
     unset = function(self)
-        GiveOrderToUnit(self.unit_id, CMD_STOP, {}, { "" }, 1)
+        GiveOrderToUnit(self.unit_id, CMD_STOP, {}, {}, 1)
         if is_debug then Echo("LandAttackController | removed unit: " .. self.unit_id) end
         return nil
     end,
     
+    --- Executes a Land Attack order based on data in `mission_control`
     execute = function(self)
         self.pos = { GetUnitPosition(self.unit_id) }
         local landing_x, target_to_landing_dx = self:_compute_landing_x()
-    
+        
+        -- this is weird and looks suboptimal
+        -- but checkpoint orders do not work without this queue emptying for some reason even if we issue the first
+        -- order directly not with insertion in hope to empty the queue
         local cmds = GetUnitCommands(self.unit_id, -1)
         for i = 0, #cmds do
             if cmds[i] and cmds[i].id ~= nil then
-                GiveOrderToUnit(self.unit_id, CMD_REMOVE, {cmds[i].id}, CMD_OPT_ALT)
+                GiveOrderToUnit(self.unit_id, CMD_REMOVE, { cmds[i].id }, CMD_OPT_ALT)
             end
         end
-    
+        
         local step_dx = v_mul(v_normalize(target_to_landing_dx), STEP_DX_0_NORM)
         local i = -1
         local x = landing_x
@@ -210,17 +216,18 @@ local LandAttackerController = {
             dst = dst - v_norm(step_dx)
             x = v_add(x, step_dx)
         end
-    
+        
         GiveOrderToUnit(self.unit_id, CMD_IDLEMODE, 1, {}, CMD_OPT_ALT)
-    
+        
         self.is_activated = true
-    
+        
         if is_debug then Echo("LandAttackController"
                 .. " | landing: " .. table_to_string(landing_x)
                 .. " | attacker: " .. table_to_string(self.pos)
         ) end
     end,
     
+    --- Processes any other non Land Attack order to manage Fly/Land state
     process_cmd = function(self)
         local is_autoland = GetUnitStates(self.unit_id).autoland
         if is_debug then Echo("LandAttackController | process_cmd | is_autoland = " .. tostring(is_autoland)
@@ -243,9 +250,9 @@ local LandAttackerController = {
         
         local rank_idx = floor(self.selection_idx / RANK_CAPACITY)
         local range = BASE_RANGE + INTER_RANK_SPACING * rank_idx
-    
+        
         local target_to_landing_dx = v_mul({ sin(rotation), 0, cos(rotation) }, range)
-    
+        
         local landing_x = v_add(mission_control.target_pos, target_to_landing_dx)
         landing_x[2] = GetGroundHeight(landing_x[1], landing_x[3])
         
@@ -272,14 +279,14 @@ function find_land_attackers(units)
 end
 
 function widget:UnitFinished(unit_id, unit_def_if, unit_team)
-    if (UnitDefs[unit_def_if].name == SWIFT_NAME) and (unit_team == GetMyTeamID()) then
+    if (unit_def_if == SWIFT_DEF_ID and unit_team == GetMyTeamID()) then
         land_attacker_controllers[unit_id] = LandAttackerController:new(unit_id);
     end
 end
 
 function widget:UnitDestroyed(unit_id)
     local land_attacker_controller = land_attacker_controllers[unit_id]
-    if not (land_attacker_controller == nil) then
+    if (land_attacker_controller ~= nil) then
         land_attacker_controllers[unit_id] = land_attacker_controller:unset()
     end
 end
