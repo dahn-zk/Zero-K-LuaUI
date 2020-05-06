@@ -42,348 +42,364 @@ return {
 				[2] = 0,
 			},
 			[5] = {
+				[1] = "amphlaunch",
+				[2] = 6,
+			},
+			[6] = {
 				[1] = "amphraid",
 				[2] = 0,
 			},
-			[6] = {
-				[1] = "cloakaa",
-				[2] = 5,
-			},
 			[7] = {
-				[1] = "gunshipaa",
-				[2] = 5,
-			},
-			[8] = {
-				[1] = "cloakarty",
+				[1] = "cloakskirm",
 				[2] = 3,
 			},
-			[9] = {
-				[1] = "gunshipcon",
-				[2] = 0,
-			},
-			[10] = {
-				[1] = "gunshipemp",
-				[2] = 8,
-			},
-			[11] = {
-				[1] = "gunshipheavyskirm",
-				[2] = 9,
-			},
-			[12] = {
-				[1] = "cloakassault",
-				[2] = 7,
-			},
-			[13] = {
-				[1] = "bomberheavy",
-				[2] = 9,
-			},
-			[14] = {
+			[8] = {
 				[1] = "gunshipraid",
 				[2] = 1,
 			},
-			[15] = {
+			[9] = {
 				[1] = "gunshipskirm",
 				[2] = 1,
 			},
-			[16] = {
+			[10] = {
 				[1] = "shieldaa",
 				[2] = 5,
 			},
-			[17] = {
-				[1] = "cloakbomb",
-				[2] = 3,
-			},
-			[18] = {
+			[11] = {
 				[1] = "shieldarty",
 				[2] = 6,
 			},
-			[19] = {
-				[1] = "shieldassault",
-				[2] = 7,
-			},
-			[20] = {
-				[1] = "hoverarty",
-				[2] = 9,
-			},
-			[21] = {
-				[1] = "shieldbomb",
-				[2] = 8,
-			},
-			[22] = {
-				[1] = "hoverassault",
-				[2] = 7,
-			},
-			[23] = {
-				[1] = "shieldcon",
-				[2] = 0,
-			},
-			[24] = {
-				[1] = "hovercon",
-				[2] = 0,
-			},
-			[25] = {
-				[1] = "shieldfelon",
-				[2] = 9,
-			},
-			[26] = {
-				[1] = "shieldraid",
-				[2] = 1,
-			},
-			[27] = {
-				[1] = "hoverheavyraid",
-				[2] = 1,
-			},
-			[28] = {
-				[1] = "shieldscout",
-				[2] = 2,
-			},
-			[29] = {
-				[1] = "shieldskirm",
-				[2] = 7,
-			},
-			[30] = {
-				[1] = "hoverraid",
-				[2] = 1,
-			},
-			[31] = {
-				[1] = "shiparty",
-				[2] = 7,
-			},
-			[32] = {
-				[1] = "shipassault",
-				[2] = 4,
-			},
-			[33] = {
-				[1] = "shipcon",
-				[2] = 0,
-			},
-			[34] = {
-				[1] = "shipriot",
-				[2] = 3,
-			},
-			[35] = {
-				[1] = "shipscout",
-				[2] = 2,
-			},
-			[36] = {
-				[1] = "cloakjammer",
-				[2] = 7,
-			},
-			[37] = {
-				[1] = "shiptorpraider",
-				[2] = 9,
-			},
-			[38] = {
-				[1] = "bomberprec",
-				[2] = 7,
-			},
-			[39] = {
-				[1] = "spideraa",
-				[2] = 5,
-			},
-			[40] = {
-				[1] = "spiderantiheavy",
-				[2] = 9,
-			},
-			[41] = {
-				[1] = "spiderassault",
-				[2] = 7,
-			},
-			[42] = {
-				[1] = "spidercon",
-				[2] = 0,
-			},
-			[43] = {
-				[1] = "cloakraid",
-				[2] = 1,
-			},
-			[44] = {
-				[1] = "spideremp",
-				[2] = 4,
-			},
-			[45] = {
-				[1] = "spiderriot",
-				[2] = 8,
-			},
-			[46] = {
-				[1] = "spiderscout",
-				[2] = 2,
-			},
-			[47] = {
-				[1] = "spiderskirm",
-				[2] = 3,
-			},
-			[48] = {
-				[1] = "jumpcon",
-				[2] = 0,
-			},
-			[49] = {
-				[1] = "jumpraid",
-				[2] = 1,
-			},
-			[50] = {
-				[1] = "jumpscout",
-				[2] = 9,
-			},
-			[51] = {
-				[1] = "cloakskirm",
-				[2] = 9,
-			},
-			[52] = {
-				[1] = "amphriot",
-				[2] = 8,
-			},
-			[53] = {
-				[1] = "striderdante",
-				[2] = 9,
-			},
-			[54] = {
-				[1] = "planecon",
-				[2] = 0,
-			},
-			[55] = {
-				[1] = "bomberriot",
-				[2] = 4,
-			},
-			[56] = {
-				[1] = "subraider",
-				[2] = 1,
-			},
-			[57] = {
-				[1] = "planelightscout",
-				[2] = 2,
-			},
-			[58] = {
-				[1] = "tacnuke",
-				[2] = 9,
-			},
-			[59] = {
-				[1] = "tankarty",
-				[2] = 5,
-			},
-			[60] = {
-				[1] = "tankassault",
-				[2] = 5,
-			},
-			[61] = {
-				[1] = "tankcon",
-				[2] = 0,
-			},
-			[62] = {
-				[1] = "tankheavyraid",
-				[2] = 1,
-			},
-			[63] = {
-				[1] = "tankraid",
-				[2] = 1,
-			},
-			[64] = {
-				[1] = "tankriot",
-				[2] = 4,
-			},
-			[65] = {
-				[1] = "gunshipheavytrans",
-				[2] = 9,
-			},
-			[66] = {
-				[1] = "jumpassault",
-				[2] = 7,
-			},
-			[67] = {
-				[1] = "gunshipbomb",
-				[2] = 2,
-			},
-			[68] = {
-				[1] = "cloakcon",
-				[2] = 0,
-			},
-			[69] = {
-				[1] = "cloakheavyraid",
-				[2] = 9,
-			},
-			[70] = {
-				[1] = "hoverriot",
-				[2] = 4,
-			},
-			[71] = {
-				[1] = "shieldriot",
-				[2] = 4,
-			},
-			[72] = {
+			[12] = {
 				[1] = "cloaksnipe",
 				[2] = 7,
 			},
-			[73] = {
-				[1] = "jumpblackhole",
-				[2] = 4,
+			[13] = {
+				[1] = "shieldassault",
+				[2] = 7,
 			},
-			[74] = {
-				[1] = "planeheavyfighter",
-				[2] = 5,
+			[14] = {
+				[1] = "hoverarty",
+				[2] = 9,
 			},
-			[75] = {
-				[1] = "athena",
+			[15] = {
+				[1] = "shieldbomb",
 				[2] = 8,
 			},
-			[76] = {
-				[1] = "cloakriot",
+			[16] = {
+				[1] = "hoverassault",
+				[2] = 7,
+			},
+			[17] = {
+				[1] = "shieldcon",
+				[2] = 0,
+			},
+			[18] = {
+				[1] = "hovercon",
+				[2] = 0,
+			},
+			[19] = {
+				[1] = "shieldfelon",
+				[2] = 9,
+			},
+			[20] = {
+				[1] = "shieldraid",
+				[2] = 1,
+			},
+			[21] = {
+				[1] = "bomberheavy",
+				[2] = 9,
+			},
+			[22] = {
+				[1] = "shieldriot",
 				[2] = 4,
 			},
-			[77] = {
-				[1] = "bomberdisarm",
-				[2] = 6,
+			[23] = {
+				[1] = "shieldscout",
+				[2] = 2,
 			},
-			[78] = {
+			[24] = {
+				[1] = "hoverraid",
+				[2] = 1,
+			},
+			[25] = {
+				[1] = "hoverriot",
+				[2] = 4,
+			},
+			[26] = {
+				[1] = "shieldskirm",
+				[2] = 7,
+			},
+			[27] = {
 				[1] = "shipaa",
 				[2] = 5,
 			},
-			[79] = {
+			[28] = {
+				[1] = "hoverskirm",
+				[2] = 3,
+			},
+			[29] = {
+				[1] = "shiparty",
+				[2] = 7,
+			},
+			[30] = {
+				[1] = "shipassault",
+				[2] = 4,
+			},
+			[31] = {
+				[1] = "shipcon",
+				[2] = 0,
+			},
+			[32] = {
+				[1] = "shipriot",
+				[2] = 1,
+			},
+			[33] = {
+				[1] = "shipscout",
+				[2] = 1,
+			},
+			[34] = {
+				[1] = "shipskirm",
+				[2] = 3,
+			},
+			[35] = {
+				[1] = "shiptorpraider",
+				[2] = 9,
+			},
+			[36] = {
+				[1] = "spideraa",
+				[2] = 5,
+			},
+			[37] = {
+				[1] = "spiderantiheavy",
+				[2] = 9,
+			},
+			[38] = {
+				[1] = "spiderassault",
+				[2] = 7,
+			},
+			[39] = {
+				[1] = "spidercon",
+				[2] = 0,
+			},
+			[40] = {
+				[1] = "spideremp",
+				[2] = 4,
+			},
+			[41] = {
+				[1] = "spiderriot",
+				[2] = 8,
+			},
+			[42] = {
+				[1] = "bomberprec",
+				[2] = 7,
+			},
+			[43] = {
+				[1] = "spiderskirm",
+				[2] = 3,
+			},
+			[44] = {
+				[1] = "cloakaa",
+				[2] = 5,
+			},
+			[45] = {
+				[1] = "planecon",
+				[2] = 0,
+			},
+			[46] = {
+				[1] = "cloakarty",
+				[2] = 3,
+			},
+			[47] = {
 				[1] = "planefighter",
 				[2] = 1,
 			},
-			[80] = {
-				[1] = "vehaa",
+			[48] = {
+				[1] = "planeheavyfighter",
 				[2] = 5,
 			},
-			[81] = {
-				[1] = "veharty",
-				[2] = 5,
+			[49] = {
+				[1] = "planelightscout",
+				[2] = 2,
 			},
-			[82] = {
-				[1] = "vehassault",
+			[50] = {
+				[1] = "striderdante",
+				[2] = 9,
+			},
+			[51] = {
+				[1] = "cloakassault",
 				[2] = 7,
 			},
-			[83] = {
-				[1] = "vehcapture",
-				[2] = 8,
+			[52] = {
+				[1] = "subraider",
+				[2] = 1,
 			},
-			[84] = {
+			[53] = {
+				[1] = "tacnuke",
+				[2] = 9,
+			},
+			[54] = {
+				[1] = "cloakbomb",
+				[2] = 3,
+			},
+			[55] = {
+				[1] = "tankarty",
+				[2] = 5,
+			},
+			[56] = {
+				[1] = "tankassault",
+				[2] = 5,
+			},
+			[57] = {
+				[1] = "bomberriot",
+				[2] = 4,
+			},
+			[58] = {
+				[1] = "tankheavyraid",
+				[2] = 1,
+			},
+			[59] = {
+				[1] = "tankraid",
+				[2] = 1,
+			},
+			[60] = {
+				[1] = "tankriot",
+				[2] = 4,
+			},
+			[61] = {
+				[1] = "hoveraa",
+				[2] = 5,
+			},
+			[62] = {
 				[1] = "vehcon",
 				[2] = 0,
 			},
-			[85] = {
+			[63] = {
+				[1] = "cloakheavyraid",
+				[2] = 9,
+			},
+			[64] = {
+				[1] = "cloakcon",
+				[2] = 0,
+			},
+			[65] = {
+				[1] = "bomberdisarm",
+				[2] = 6,
+			},
+			[66] = {
+				[1] = "jumpscout",
+				[2] = 8,
+			},
+			[67] = {
+				[1] = "athena",
+				[2] = 8,
+			},
+			[68] = {
+				[1] = "tankcon",
+				[2] = 0,
+			},
+			[69] = {
+				[1] = "jumpblackhole",
+				[2] = 4,
+			},
+			[70] = {
+				[1] = "spiderscout",
+				[2] = 2,
+			},
+			[71] = {
+				[1] = "cloakjammer",
+				[2] = 7,
+			},
+			[72] = {
+				[1] = "gunshipcon",
+				[2] = 0,
+			},
+			[73] = {
+				[1] = "gunshipaa",
+				[2] = 5,
+			},
+			[74] = {
+				[1] = "jumpassault",
+				[2] = 7,
+			},
+			[75] = {
+				[1] = "vehaa",
+				[2] = 5,
+			},
+			[76] = {
+				[1] = "veharty",
+				[2] = 5,
+			},
+			[77] = {
+				[1] = "vehassault",
+				[2] = 7,
+			},
+			[78] = {
+				[1] = "vehcapture",
+				[2] = 8,
+			},
+			[79] = {
+				[1] = "cloakraid",
+				[2] = 1,
+			},
+			[80] = {
 				[1] = "vehheavyarty",
 				[2] = 7,
 			},
-			[86] = {
+			[81] = {
 				[1] = "vehraid",
 				[2] = 1,
 			},
-			[87] = {
+			[82] = {
 				[1] = "vehriot",
 				[2] = 4,
 			},
-			[88] = {
+			[83] = {
 				[1] = "vehscout",
 				[2] = 2,
 			},
-			[89] = {
+			[84] = {
 				[1] = "vehsupport",
 				[2] = 9,
 			},
-			[90] = {
-				[1] = "hoverskirm",
+			[85] = {
+				[1] = "gunshipbomb",
+				[2] = 2,
+			},
+			[86] = {
+				[1] = "jumpskirm",
+				[2] = 3,
+			},
+			[87] = {
+				[1] = "cloakriot",
 				[2] = 4,
+			},
+			[88] = {
+				[1] = "jumpraid",
+				[2] = 1,
+			},
+			[89] = {
+				[1] = "gunshipemp",
+				[2] = 8,
+			},
+			[90] = {
+				[1] = "amphriot",
+				[2] = 4,
+			},
+			[91] = {
+				[1] = "gunshipheavyskirm",
+				[2] = 9,
+			},
+			[92] = {
+				[1] = "jumpcon",
+				[2] = 0,
+			},
+			[93] = {
+				[1] = "gunshipheavytrans",
+				[2] = 9,
+			},
+			[94] = {
+				[1] = "hoverheavyraid",
+				[2] = 1,
 			},
 		},
 	},
@@ -437,7 +453,7 @@ return {
 			[1] = -376,
 			[2] = -567,
 			[3] = -201,
-			[4] = -282,
+			[4] = -337,
 			[5] = true,
 			[6] = true,
 		},
@@ -464,11 +480,10 @@ return {
 			[6] = true,
 		},
 		ProChat = {
-			[1] = -1407,
-			[2] = -247.45007,
-			[3] = -315,
-			[4] = 0,
-			[5] = true,
+			[1] = 519,
+			[2] = -283.45007,
+			[3] = 1203,
+			[4] = -29,
 			[6] = true,
 		},
 		ProConsole = {
@@ -488,6 +503,19 @@ return {
 			[2] = 0,
 			[3] = 400,
 			[4] = 300,
+		},
+		SpectatorEconomyPanel_vz_1 = {
+			[1] = 300,
+			[2] = 58,
+			[3] = 780,
+			[4] = 120,
+		},
+		SpectatorEconomyPanel_vz_2 = {
+			[1] = -780,
+			[2] = 58,
+			[3] = -300,
+			[4] = 120,
+			[5] = true,
 		},
 		SpectatorPlayerPanel = {
 			[1] = 630,
@@ -557,11 +585,11 @@ return {
 			[5] = true,
 		},
 		news_ticker_window = {
-			[1] = -430,
-			[2] = 44,
-			[3] = 0,
-			[4] = 70,
-			[5] = true,
+			[1] = 518,
+			[2] = -27,
+			[3] = 1203,
+			[4] = 0,
+			[6] = true,
 		},
 		objectivesButtonWindow = {
 			[1] = 0,
@@ -601,10 +629,10 @@ return {
 			[4] = 230,
 		},
 		window0 = {
-			[1] = 50,
-			[2] = -480,
-			[3] = 260,
-			[4] = -368,
+			[1] = 90,
+			[2] = -485,
+			[3] = 300,
+			[4] = -373,
 			[6] = true,
 		},
 		window2 = {
@@ -622,13 +650,13 @@ return {
 		["epic_Settings/Misc_Show_Advanced_Settings"] = true,
 		lang = "en",
 		menuClassname = "panel_0011_small",
-		music_volume = 0.19999999,
+		music_volume = 0,
 		showAdvanced = true,
 		show_crudemenu = true,
 		simpleSettingsMode = false,
-		sub_pos_x = 1561,
-		sub_pos_y = 401,
-		subwindow_height = 621,
+		sub_pos_x = 1420,
+		sub_pos_y = 322,
+		subwindow_height = 620,
 		versionmin = 51,
 		config = {
 			["epic_Area-reclaim_trees_defaultAvoidTrees"] = false,
@@ -721,9 +749,12 @@ return {
 			["epic_Chili_Selections_&_CursorTip_v2_tooltip_opacity"] = 0.79999995,
 			["epic_Chili_Selections_&_CursorTip_v2_uniticon_size"] = 44,
 			["epic_Chili_Share_menu_v1.24_automation_clanmerge"] = true,
-			epic_Chili_Spectator_Panels_enableSpectator = false,
+			epic_Chili_Spectator_Panels_clanNameLengthCutoff = 20,
+			epic_Chili_Spectator_Panels_enablePlayerPanel = true,
+			epic_Chili_Spectator_Panels_enableSpectator = true,
 			epic_Chili_Spectator_Panels_fancySkinning = "panel_1011",
-			epic_Chili_Spectator_Panels_playerOpacity = 0.94999999,
+			epic_Chili_Spectator_Panels_playerOpacity = 1,
+			epic_Chili_Spectator_Panels_resourceOpacity = 1,
 			["epic_Combo_Overhead/Free_Camera_(experimental)_zoomouttocenter"] = true,
 			["epic_Combo_Overhead_/_Free_Camera_fov"] = 45,
 			["epic_Combo_Overhead_/_Free_Camera_freemode"] = false,
@@ -807,7 +838,7 @@ return {
 			epic_Unit_Start_State_athena_selection_rank = 2,
 			epic_Unit_Start_State_bomberdisarm_firestate0 = 0,
 			epic_Unit_Start_State_bomberdisarm_movestate1 = 0,
-			epic_Unit_Start_State_bomberheavy_firestate0 = 0,
+			epic_Unit_Start_State_bomberheavy_firestate0 = -1,
 			epic_Unit_Start_State_bomberheavy_movestate1 = 0,
 			epic_Unit_Start_State_bomberprec_firestate0 = 0,
 			epic_Unit_Start_State_bomberprec_movestate1 = 0,
@@ -887,25 +918,27 @@ return {
 		buildHeight = {
 			energyfusion = -100,
 			energygeo = -340,
-			energypylon = 40,
+			energypylon = -80,
+			energysingu = -100,
 			factoryshield = -20,
 			shipheavyarty = -40,
 			staticarty = 80,
 			staticcon = 0,
 			staticheavyarty = 180,
 			staticheavyradar = 100,
-			staticmex = -140,
+			staticmex = -160,
 			staticmissilesilo = -160,
 			staticnuke = -120,
 			staticradar = -20,
 			staticstorage = -120,
+			subtacmissile = -160,
 			turretaafar = 200,
 			turretaaheavy = 120,
 			turretaalaser = 20,
 			turretemp = 160,
-			turretheavylaser = 40,
+			turretheavylaser = 120,
 			turretimpulse = 0,
-			turretriot = 40,
+			turretriot = 120,
 		},
 	},
 	["Persistent Build Spacing"] = {
@@ -917,7 +950,7 @@ return {
 			energygeo = 0,
 			energypylon = 41,
 			energysingu = 4,
-			energysolar = 0,
+			energysolar = 4,
 			energywind = 2,
 			factoryamph = 8,
 			factorycloak = 8,
@@ -936,7 +969,7 @@ return {
 			spiderskirm = 4,
 			staticantinuke = 4,
 			staticarty = 4,
-			staticcon = 1,
+			staticcon = 3,
 			staticheavyarty = 4,
 			staticheavyradar = 4,
 			staticjammer = 4,
@@ -976,47 +1009,27 @@ return {
 	},
 	["Win Counter"] = {
 		allyTeamCount = 3,
-		count = 8,
-		hasWins = false,
-		Chomolungma = {
-			allyTeam = 0,
-			wins = 0,
-			wonLastGame = false,
-		},
-		LooChenChanCZ = {
+		count = 4,
+		hasWins = true,
+		Demian = {
 			allyTeam = 1,
 			wins = 0,
 			wonLastGame = false,
 		},
-		Loocheenchancz = {
+		dahn = {
+			allyTeam = 0,
+			wins = 1,
+			wonLastGame = true,
+		},
+		dimongen = {
 			allyTeam = 1,
 			wins = 0,
 			wonLastGame = false,
 		},
-		MyHeart = {
-			allyTeam = 1,
-			wins = 0,
-			wonLastGame = false,
-		},
-		Nlyter = {
+		drint3nso = {
 			allyTeam = 0,
-			wins = 0,
-			wonLastGame = false,
-		},
-		Power_Paul = {
-			allyTeam = 0,
-			wins = 0,
-			wonLastGame = false,
-		},
-		TheLyraki = {
-			allyTeam = 0,
-			wins = 0,
-			wonLastGame = false,
-		},
-		playerO1 = {
-			allyTeam = 1,
-			wins = 0,
-			wonLastGame = false,
+			wins = 1,
+			wonLastGame = true,
 		},
 	},
 }

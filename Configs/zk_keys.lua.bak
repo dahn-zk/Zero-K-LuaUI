@@ -363,7 +363,7 @@ return {
 		},
 		[91] = {
 			[1] = "wantonoff",
-			[2] = "C+home",
+			[2] = "end",
 		},
 		[92] = {
 			[1] = "pushpull",
@@ -791,7 +791,7 @@ return {
 		},
 		[198] = {
 			[1] = "upgradecommstop",
-			[2] = "C+q",
+			[2] = "q",
 		},
 		[199] = {
 			[1] = "idlemode",
@@ -867,11 +867,11 @@ return {
 		},
 		[217] = {
 			[1] = "wantonoff 1",
-			[2] = "home",
+			[2] = "None",
 		},
 		[218] = {
 			[1] = "wantonoff 0",
-			[2] = "end",
+			[2] = "None",
 		},
 		[219] = {
 			[1] = "priority 2",
@@ -895,7 +895,7 @@ return {
 		},
 		[224] = {
 			[1] = "airstrafe",
-			[2] = "end",
+			[2] = "right",
 		},
 		[225] = {
 			[1] = "upgradecomm",
@@ -939,11 +939,11 @@ return {
 		},
 		[235] = {
 			[1] = "preventoverkill 0",
-			[2] = "A+C+r",
+			[2] = "None",
 		},
 		[236] = {
 			[1] = "preventoverkill 1",
-			[2] = "A+C+w",
+			[2] = "None",
 		},
 		[237] = {
 			[1] = "raiseground",
@@ -951,7 +951,7 @@ return {
 		},
 		[238] = {
 			[1] = "epic_icon_zoom_transition_iconmodehotkey",
-			[2] = "Alt+I",
+			[2] = "None",
 		},
 		[239] = {
 			[1] = "epic_chili_pro_console2_enableconsole",
@@ -988,6 +988,34 @@ return {
 		[247] = {
 			[1] = "toggleoverview",
 			[2] = "Ctrl+tab",
+		},
+		[248] = {
+			[1] = "preventoverkill",
+			[2] = "A+C+s",
+		},
+		[249] = {
+			[1] = "divestate",
+			[2] = "C+r",
+		},
+		[250] = {
+			[1] = "unitai",
+			[2] = "None",
+		},
+		[251] = {
+			[1] = "retreat 1",
+			[2] = "A+C+a",
+		},
+		[252] = {
+			[1] = "retreat 2",
+			[2] = "A+C+s",
+		},
+		[253] = {
+			[1] = "retreat 3",
+			[2] = "A+C+w",
+		},
+		[254] = {
+			[1] = "cancelretreat",
+			[2] = "A+C+r",
 		},
 	},
 }
