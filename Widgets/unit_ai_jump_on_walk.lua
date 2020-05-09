@@ -1,18 +1,18 @@
-local version = "v0.507"
-function widget:GetInfo()
-  return {
-    name      = "Auto Jump Over Terrain no Scuttle",
-    desc      = version .. " Jumper automatically jump over terrain or buildings if it shorten walk time.",
-    author    = "Msafwan and terve",
-    date      = "4 February 2014",
+local version = "1.0"
+
+function widget:GetInfo() return {
+    name      = "Jump Walk AI",
+    desc      = "[v" .. version .. "] Jumpers automatically jump over terrain or buildings if it shorten walk time.",
+    author    = "Msafwan, terve, dahn",
+    date      = "2020",
     license   = "GNU GPL, v2 or later",
     layer     = 21,
-    enabled = false
-  }
-end
+    enabled   = false
+} end
 
 VFS.Include("LuaRules/Configs/customcmds.h.lua")
 VFS.Include("LuaRules/Utilities/isTargetReachable.lua")
+
 local spGetUnitPosition = Spring.GetUnitPosition
 local spGetUnitRulesParam = Spring.GetUnitRulesParam
 local spValidUnitID = Spring.ValidUnitID
@@ -23,8 +23,10 @@ local spGetFeaturePosition = Spring.GetFeaturePosition
 local spGetUnitIsStunned = Spring.GetUnitIsStunned
 local spGetGameSeconds = Spring.GetGameSeconds
 local GetUnitIsCloaked = Spring.GetUnitIsCloaked
+
 ------------------------------------------------------------
 ------------------------------------------------------------
+
 local gaussUnitDefID = UnitDefNames["turretgauss"].id
 local myTeamID
 local jumperAddInfo={}
@@ -515,6 +517,7 @@ end
 
 ------------------------------------------------------------
 ------------------------------------------------------------
+
 function widget:UnitFinished(unitID,unitDefID,unitTeam)
 	if myTeamID==unitTeam and jumperDefs[unitDefID] and not jumpersUnitID[unitID] then
 		jumpersToJump_Count = jumpersToJump_Count + 1
