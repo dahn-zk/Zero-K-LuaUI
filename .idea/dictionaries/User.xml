@@ -12,6 +12,7 @@
       <w>deepcopy</w>
       <w>defs</w>
       <w>dgun</w>
+      <w>dists</w>
       <w>dont</w>
       <w>elmos</w>
       <w>idlemode</w>
@@ -25,9 +26,11 @@
       <w>neibors</w>
       <w>onoff</w>
       <w>orth</w>
+      <w>pinger</w>
       <w>planefighter</w>
       <w>rrect</w>
       <w>shortkey</w>
+      <w>staticnuke</w>
       <w>tacnuke</w>
       <w>terve</w>
       <w>unsynced</w>

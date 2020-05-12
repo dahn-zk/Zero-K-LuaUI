@@ -208,7 +208,7 @@ local groupNumber = {
 Spring.Echo("group numbers map", dump(groupNumber))
 
 function WG.AutoGroup_UpdateGroupNumbers(newNumber)
-	Spring.Echo("new number", dump(newNumber))
+	--Spring.Echo("new number", dump(newNumber))
 	groupNumber = newNumber
 end
 

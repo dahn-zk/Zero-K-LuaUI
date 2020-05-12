@@ -6,8 +6,8 @@ function widget:GetInfo()
       date         = "2019",
       license      = "PD", -- should be compatible with Spring
       layer        = 11,
-	  handler		= true, --for adding customCommand into UI
-      enabled      = true
+	  handler	   = true, --for adding customCommand into UI
+      enabled      = false
    }
 end
 

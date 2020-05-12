@@ -1,19 +1,17 @@
 ----------------------------------------------------------------------------------------------------------------------
 -- Config
 ----------------------------------------------------------------------------------------------------------------------
-version = "1.0"
-cmd_dsc = "Command Swift to land optimally to fire on target area."
-is_debug = false
+local version = "2.0"
+local cmd_dsc = "Command Swift to land optimally to fire on target area."
+local is_debug = false
 
 --- At which range away from target units should land
-BASE_RANGE = 600
-RANK_CAPACITY = 28
-INTER_RANK_SPACING = 50
+local BASE_RANGE = 600
+local RANK_CAPACITY = 28
+local INTER_RANK_SPACING = 50
 --- Rotation between two neibor Swifts in a rank. Configures the distance between two neibors, ideally should be a
 --- simple distance value, but currently the logic is based on circular formation.
-DR = math.pi / 80
---- Distance for the first "correctional checkpoint". The next one is in double distance and so on.
-STEP_DX_0_NORM = 400
+local DR = math.pi / 80
 
 -- @formatter:off
 function widget:GetInfo() return {
@@ -52,35 +50,14 @@ function widget:GetInfo() return {
 -- Includes
 ----------------------------------------------------------------------------------------------------------------------
 
-LIBS_PATH = "LuaUI/Widgets/Libs"
+local LIBS_PATH = "LuaUI/Widgets/Libs"
 
+VFS.Include(LIBS_PATH .. "/speedups.lua")
 VFS.Include(LIBS_PATH .. "/cmd.lua")
 if is_debug then VFS.Include(LIBS_PATH .. "/table_to_string.lua") end
 VFS.Include(LIBS_PATH .. "/deepcopy.lua")
 VFS.Include(LIBS_PATH .. "/vector.lua")
-
-----------------------------------------------------------------------------------------------------------------------
--- Speedups
-----------------------------------------------------------------------------------------------------------------------
-
--- @formatter:off
-local sin   = math.sin
-local cos   = math.cos
-local floor = math.floor
-
-local GetUnitCommands = Spring.GetUnitCommands
-local GetUnitStates   = Spring.GetUnitStates
-local GetUnitMaxRange = Spring.GetUnitMaxRange
-local GetUnitPosition = Spring.GetUnitPosition
-local GiveOrderToUnit = Spring.GiveOrderToUnit
-local GetGroundHeight = Spring.GetGroundHeight
-local GetTeamUnits    = Spring.GetTeamUnits
-local GetMyTeamID     = Spring.GetMyTeamID
-local GetUnitDefID    = Spring.GetUnitDefID
-local GetSpecState    = Spring.GetSpectatingState
-local MarkerAddPoint  = Spring.MarkerAddPoint
-local Echo            = Spring.Echo
--- @formatter:on
+VFS.Include(LIBS_PATH .. "/assignment_optimization.lua")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Constants
@@ -114,7 +91,7 @@ local CMD_LAND_ATTACK_DEF = {
 ----------------------------------------------------------------------------------------------------------------------
 
 local land_attacker_controllers = {}
-local selected_land_attackers = nil
+local SSIDs = nil
 
 ----------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------------
@@ -129,34 +106,76 @@ local mission_control = {
     rotation,
     --- Where the phalanx starts.
     base_rotation,
+    ---
+    landing_x_a,
     
     --- Sets `target_pos`, computes and sets `cluster_pos` and `rotation`.
     process_target = function(self, target_pos)
+        if SSIDs == nil then return end
+        
         self.target_pos = target_pos
-        
+    
         self:_comp_cluster_center()
-        
+    
         self.rotation = v_atan(self.cluster_center, target_pos)
-        
+    
         local phalanx_length = RANK_CAPACITY -- avoiding `math.min`. see https://springrts.com/wiki/Lua_Performance
-        if (#selected_land_attackers < phalanx_length) then phalanx_length = #selected_land_attackers end
+        if (#SSIDs < phalanx_length) then phalanx_length = #SSIDs end
         self.base_rotation = self.rotation - (DR * (phalanx_length - 1)) / 2
-        
+    
         if is_debug then
             MarkerAddPoint(self.target_pos[1], self.target_pos[2], self.target_pos[3], "target", false)
-            MarkerAddPoint(self.cluster_center[1], self.cluster_center[2], self.cluster_center[3], "cluster center", false)
+            MarkerAddPoint(self.cluster_center[1], self.cluster_center[2], self.cluster_center[3],
+                    "cluster center\nswifts: " .. #SSIDs, false)
             Echo("rotation: " .. self.rotation)
+        end
+    
+        self:_comp_landing_x_a()
+    
+        local distances = {}
+        for i = 1, #SSIDs do
+            distances[i] = {}
+            local swift_x = { GetUnitPosition(SSIDs[i]) }
+            for j = 1, #SSIDs do
+                local landing_x = self.landing_x_a[j]
+                distances[i][j] = (landing_x[1] - swift_x[1])^2 + (landing_x[3] - swift_x[3])^2
+            end
+        end
+        
+        self.landing_x_assignments = assign(distances)
+        for i = 1, #self.landing_x_assignments do
+            self.landing_x_assignments[i] = self.landing_x_a[self.landing_x_assignments[i]]
+        end
+        if is_debug then Echo("landing_x_assignments: " .. table_to_string(self.landing_x_assignments)) end
+    end,
+    
+    _comp_landing_x_a = function(self)
+        self.landing_x_a = {}
+        for i = 0, #SSIDs - 1 do
+            local rotation = self.base_rotation + DR * (i % RANK_CAPACITY)
+        
+            local rank_idx = floor(i / RANK_CAPACITY)
+            local range = BASE_RANGE + INTER_RANK_SPACING * rank_idx
+        
+            local target_to_landing_dx = v_mul({ sin(rotation), 0, cos(rotation) }, range)
+        
+            local landing_x = v_add(self.target_pos, target_to_landing_dx)
+            landing_x[2] = GetGroundHeight(landing_x[1], landing_x[3])
+        
+            self.landing_x_a[i + 1] = landing_x
+            
+            if is_debug then Echo("MissionControl | _comp_landing_x_a | " .. table_to_string(landing_x)) end
         end
     end,
     
     _comp_cluster_center = function(self)
         self.cluster_center = { 0, 0, 0 }
-        for i = 1, #selected_land_attackers do
-            local controller = land_attacker_controllers[selected_land_attackers[i]]
+        for i = 1, #SSIDs do
+            local controller = land_attacker_controllers[SSIDs[i]]
             local pos = { GetUnitPosition(controller.unit_id) }
             self.cluster_center = v_add(self.cluster_center, pos)
         end
-        self.cluster_center = v_div(self.cluster_center, #selected_land_attackers)
+        self.cluster_center = v_div(self.cluster_center, #SSIDs)
     end
 }
 
@@ -164,7 +183,6 @@ local mission_control = {
 local LandAttackerController = {
     unit_id,
     selection_idx,
-    pos,
     rotation,
     max_range,
     target_pos,
@@ -174,7 +192,6 @@ local LandAttackerController = {
         self = deepcopy(self)
         self.unit_id = unit_id
         self.max_range = GetUnitMaxRange(self.unit_id)
-        self.pos = { GetUnitPosition(self.unit_id) }
         self.is_activated = false
         if is_debug then Echo("LandAttackController | added unit: " .. self.unit_id) end
         return self
@@ -188,34 +205,24 @@ local LandAttackerController = {
     
     --- Executes a Land Attack order based on data in `mission_control`
     execute = function(self)
-        self.pos = { GetUnitPosition(self.unit_id) }
-        local landing_x, target_to_landing_dx = self:_compute_landing_x()
-        
+        local pos = { GetUnitPosition(self.unit_id) }
+    
         -- this is weird and looks suboptimal
         -- but checkpoint orders do not work without this queue emptying for some reason even if we issue the first
-        -- order directly not with insertion in hope to empty the queue
+        -- order directly not with insertion in hope to empty the queue.
+        -- should be gone with command queue support implementation
         local cmds = GetUnitCommands(self.unit_id, -1)
         for i = 0, #cmds do
             if cmds[i] and cmds[i].id ~= nil then
                 GiveOrderToUnit(self.unit_id, CMD_REMOVE, { cmds[i].id }, CMD_OPT_ALT)
             end
         end
-        
-        local step_dx = v_mul(v_normalize(target_to_landing_dx), STEP_DX_0_NORM)
-        local i = -1
-        local x = landing_x
-        local dst = v_norm(v_sub(x, self.pos))
-        while dst > STEP_DX_0_NORM do
-            x[2] = GetGroundHeight(x[1], x[3])
-            GiveOrderToUnit(self.unit_id, CMD_INSERT,
-                    { i, CMD_MOVE, CMD_OPT_INTERNAL, x[1], x[2], x[3] },
-                    CMD_OPT_ALT
-            )
-            i = i - 1
-            step_dx = v_mul(2, step_dx)
-            dst = dst - v_norm(step_dx)
-            x = v_add(x, step_dx)
-        end
+    
+        local x = mission_control.landing_x_assignments[self.selection_idx]
+        GiveOrderToUnit(self.unit_id, CMD_INSERT,
+                { 0, CMD_MOVE, CMD_OPT_INTERNAL, x[1], x[2], x[3] },
+                CMD_OPT_ALT
+        )
         
         GiveOrderToUnit(self.unit_id, CMD_IDLEMODE, 1, {}, CMD_OPT_ALT)
         
@@ -223,7 +230,7 @@ local LandAttackerController = {
         
         if is_debug then Echo("LandAttackController"
                 .. " | landing: " .. table_to_string(landing_x)
-                .. " | attacker: " .. table_to_string(self.pos)
+                .. " | attacker: " .. table_to_string(pos)
         ) end
     end,
     
@@ -243,21 +250,6 @@ local LandAttackerController = {
         if is_debug then Echo("LandAttackController | cancel | unit: " .. self.unit_id) end
         GiveOrderToUnit(self.unit_id, CMD_IDLEMODE, 0, {}, 0)
         self.is_activated = false
-    end,
-    
-    _compute_landing_x = function(self)
-        local rotation = mission_control.base_rotation + DR * (self.selection_idx % RANK_CAPACITY)
-        
-        local rank_idx = floor(self.selection_idx / RANK_CAPACITY)
-        local range = BASE_RANGE + INTER_RANK_SPACING * rank_idx
-        
-        local target_to_landing_dx = v_mul({ sin(rotation), 0, cos(rotation) }, range)
-        
-        local landing_x = v_add(mission_control.target_pos, target_to_landing_dx)
-        landing_x[2] = GetGroundHeight(landing_x[1], landing_x[3])
-        
-        if is_debug then Echo("LandAttackController | _compute_landing_pos | " .. table_to_string(landing_x)) end
-        return landing_x, target_to_landing_dx
     end,
 }
 
@@ -326,18 +318,18 @@ end
 --- Called when a command is issued. Returning true deletes the command and does not send it through the network.
 --- (Unsynced only)
 function widget:CommandNotify(cmd_id, cmd_params, cmd_opts)
-    if selected_land_attackers ~= nil then
+    if SSIDs ~= nil then
         if is_debug then debug_cmd("CommandNotify", unit_id, cmd_id, cmd_params, cmd_opts) end
         if (cmd_id == CMD_LAND_ATTACK and #cmd_params == 3) then
             local target_pos = cmd_params
             mission_control:process_target(target_pos)
-            for i = 1, #selected_land_attackers do
-                land_attacker_controllers[selected_land_attackers[i]]:execute(target_pos)
+            for i = 1, #SSIDs do
+                land_attacker_controllers[SSIDs[i]]:execute(target_pos)
             end
             return true
         else
-            for i = 1, #selected_land_attackers do
-                local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
+            for i = 1, #SSIDs do
+                local land_attacker_controller = land_attacker_controllers[SSIDs[i]]
                 if (land_attacker_controller) then land_attacker_controller:process_cmd(cmd_id) end
             end
         end
@@ -345,17 +337,17 @@ function widget:CommandNotify(cmd_id, cmd_params, cmd_opts)
 end
 
 function widget:SelectionChanged(selected_units)
-    selected_land_attackers = find_land_attackers(selected_units)
-    if selected_land_attackers ~= nil then
-        for i = 1, #selected_land_attackers do
-            local land_attacker_controller = land_attacker_controllers[selected_land_attackers[i]]
+    SSIDs = find_land_attackers(selected_units)
+    if SSIDs ~= nil then
+        for i = 1, #SSIDs do
+            local land_attacker_controller = land_attacker_controllers[SSIDs[i]]
             if (land_attacker_controller) then land_attacker_controller.selection_idx = i end
         end
     end
 end
 
 function widget:CommandsChanged()
-    if selected_land_attackers then
+    if SSIDs then
         local customCommands = widgetHandler.customCommands
         customCommands[#customCommands + 1] = CMD_LAND_ATTACK_DEF
     end

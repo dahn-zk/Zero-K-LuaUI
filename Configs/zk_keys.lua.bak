@@ -303,7 +303,7 @@ return {
 		},
 		[76] = {
 			[1] = "loadunits",
-			[2] = "None",
+			[2] = "A+up",
 		},
 		[77] = {
 			[1] = "loadselected",
@@ -343,7 +343,7 @@ return {
 		},
 		[86] = {
 			[1] = "unloadunits",
-			[2] = "None",
+			[2] = "A+down",
 		},
 		[87] = {
 			[1] = "pastetext",
@@ -986,36 +986,36 @@ return {
 			[2] = "A+.",
 		},
 		[247] = {
-			[1] = "toggleoverview",
-			[2] = "Ctrl+tab",
-		},
-		[248] = {
 			[1] = "preventoverkill",
 			[2] = "A+C+s",
 		},
-		[249] = {
+		[248] = {
 			[1] = "divestate",
 			[2] = "C+r",
 		},
-		[250] = {
+		[249] = {
 			[1] = "unitai",
 			[2] = "None",
 		},
-		[251] = {
+		[250] = {
 			[1] = "retreat 1",
 			[2] = "A+C+a",
 		},
-		[252] = {
+		[251] = {
 			[1] = "retreat 2",
 			[2] = "A+C+s",
 		},
-		[253] = {
+		[252] = {
 			[1] = "retreat 3",
 			[2] = "A+C+w",
 		},
-		[254] = {
+		[253] = {
 			[1] = "cancelretreat",
 			[2] = "A+C+r",
+		},
+		[254] = {
+			[1] = "toggleoverview",
+			[2] = "Ctrl+Tab",
 		},
 	},
 }
